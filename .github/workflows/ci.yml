@@ -1,0 +1,42 @@
+# Runs on every PR into main and on direct pushes to main.
+# Catches type errors and broken builds *before* a release tag is cut,
+# so a tagged release can't be born broken.
+#
+# Single-platform (Ubuntu) because typecheck + electron-vite build are
+# OS-agnostic. The actual cross-platform packaging happens in
+# release.yml on tag pushes.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        # `npm ci` enforces a clean install from package-lock.json. The
+        # postinstall hook (electron-builder install-app-deps) rebuilds
+        # better-sqlite3 against Electron's ABI.
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Build (electron-vite)
+        run: npm run build

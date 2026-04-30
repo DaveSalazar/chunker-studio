@@ -1,0 +1,43 @@
+appId: com.solintsoft.chunkerstudio
+productName: Chunker Studio
+directories:
+  buildResources: build
+files:
+  - "!**/.vscode/*"
+  - "!src/*"
+  - "!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml}"
+  - "!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}"
+  - "!storybook-static/*"
+  - "!.storybook/*"
+mac:
+  target:
+    - target: dmg
+      arch: [universal]
+    - target: zip
+      arch: [universal]
+  category: public.app-category.developer-tools
+win:
+  target:
+    - nsis
+    - zip
+nsis:
+  artifactName: ${name}-${version}-setup.${ext}
+  shortcutName: Chunker Studio
+  uninstallDisplayName: Chunker Studio
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Development
+# Publishes built artifacts straight to GitHub Releases. The repository
+# is matched against `package.json` "repository.url" — make sure that
+# field is up to date if you transfer the repo or rename the owner.
+publish:
+  provider: github
+  # `draft` keeps the release hidden from users until you explicitly
+  # publish it. Lets you review auto-generated release notes, tweak the
+  # body, and verify all platforms uploaded before making it visible.
+  # Switch to `release` if you want fully-automated publish-on-tag.
+  releaseType: draft

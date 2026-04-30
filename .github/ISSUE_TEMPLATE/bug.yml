@@ -1,0 +1,66 @@
+name: Bug report
+description: Something isn't working the way it should.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. The more reproducible the report, the faster the fix.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear, short description of what went wrong.
+      placeholder: "When I open a 500MB PDF, the parsed view stays blank for 30+ seconds…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps so someone else can hit the same state.
+      placeholder: |
+        1. Open a folder containing a PDF
+        2. Click the file in the folder list
+        3. Hit Parse
+        4. Wait 30 seconds — view stays blank
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      placeholder: "The parsed view should populate within a few seconds."
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Chunker Studio version
+      placeholder: "v0.1.0 (visible in the top bar)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - Windows
+        - Linux
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console logs (optional)
+      description: Open the dev console (View → Toggle Developer Tools) and paste any error output.
+      render: shell

@@ -1,0 +1,66 @@
+{
+  "name": "chunker-studio",
+  "version": "0.1.0",
+  "description": "Desktop tool for inspecting and tuning document chunking pipelines",
+  "private": true,
+  "license": "MIT",
+  "homepage": "https://github.com/YOUR-HANDLE/chunker-studio",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YOUR-HANDLE/chunker-studio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YOUR-HANDLE/chunker-studio/issues"
+  },
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.9.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "inversify": "^6.2.2",
+    "js-tiktoken": "^1.0.21",
+    "lucide-react": "^0.462.0",
+    "mammoth": "^1.12.0",
+    "pdfjs-dist": "^4.10.38",
+    "pg": "^8.20.0",
+    "pgvector": "^0.2.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-resizable-panels": "^2.1.9",
+    "reflect-metadata": "^0.2.2",
+    "tailwind-merge": "^2.6.0"
+  },
+  "devDependencies": {
+    "@electron-toolkit/preload": "^3.0.1",
+    "@electron-toolkit/utils": "^3.0.0",
+    "@storybook/addon-docs": "^10.3.5",
+    "@storybook/react-vite": "^10.3.5",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.16.5",
+    "@types/pg": "^8.20.0",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react-swc": "^3.11.0",
+    "autoprefixer": "^10.4.21",
+    "electron": "^41.0.0",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^5.0.0",
+    "postcss": "^8.5.6",
+    "storybook": "^10.3.5",
+    "tailwindcss": "^3.4.17",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.8.3",
+    "vite": "^6.0.0"
+  }
+}

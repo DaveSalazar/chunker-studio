@@ -1,0 +1,40 @@
+name: Feature request
+description: Suggest an idea for Chunker Studio.
+title: "[feat] "
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening a feature request, please skim [CONTRIBUTING.md → What's out of scope](../blob/main/CONTRIBUTING.md#whats-out-of-scope) — it'll save us both time if the idea is already a known non-goal.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the situation you're hitting, not the implementation.
+      placeholder: "I work with mixed PDF/DOCX corpora and currently have to re-tune the chunker per file…"
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How you'd like it to work. Sketch the UX, not the code.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: What other approaches did you think about? Why didn't they work?
+
+  - type: checkboxes
+    id: ack
+    attributes:
+      label: Acknowledgements
+      options:
+        - label: I've read the "What's out of scope" section in CONTRIBUTING.md
+          required: true

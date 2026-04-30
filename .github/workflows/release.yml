@@ -1,0 +1,55 @@
+# Triggered by pushing a tag like `v0.1.0` to main.
+# Runs three platform builds in parallel and publishes the resulting
+# .dmg / .exe / .AppImage / .deb to a GitHub Release.
+#
+# To cut a release:
+#   1. Bump version in package.json
+#   2. git commit -am "chore: release v0.1.0"
+#   3. git tag v0.1.0
+#   4. git push --follow-tags
+#
+# electron-builder reads the publish config from electron-builder.yml
+# (provider: github) and uploads each platform's artifacts using the
+# auto-generated GITHUB_TOKEN.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    permissions:
+      # Required so the auto-generated GITHUB_TOKEN can attach build
+      # artifacts to a Release.
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (electron-vite)
+        run: npm run build
+
+      - name: Package + publish (electron-builder)
+        # `--publish always` uploads to GitHub Releases. The release is
+        # created as a *draft* (electron-builder.yml → publish.releaseType)
+        # so you can review the auto-generated notes and edit them before
+        # making the release visible to users. Subsequent matrix jobs
+        # append their artifacts to the same draft.
+        run: npx electron-builder --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
