@@ -153,6 +153,8 @@ export const es: Translations = {
       "Este PDF no tiene capa de texto — parece ser una imagen escaneada. No hay OCR disponible, así que el troceado no puede ejecutarse. Vuelve a exportar el PDF con capa de texto o pásalo por OCR antes de abrirlo.",
     pdfLoading: "Cargando PDF…",
     pdfFailed: "No se pudo cargar el PDF.",
+    pdfPrevPage: "Página anterior",
+    pdfNextPage: "Página siguiente",
     docxNoPreview:
       "No hay vista previa para DOCX — pulsa Procesar para extraer su texto.",
     unsupportedNoPreview:

@@ -13,7 +13,7 @@ looks right. Local-first; nothing leaves your machine until you click
 ![Status](https://img.shields.io/badge/status-freeware-brightgreen)
 
 > **Like it?** Chunker Studio is free forever. If it saved you time,
-> consider [buying me a coffee on Ko-fi](https://ko-fi.com/YOUR-KOFI-HANDLE) —
+> consider [buying me a coffee on Ko-fi](https://ko-fi.com/davesalazar) —
 > it keeps me motivated to ship more freeware tools.
 
 ---
@@ -174,7 +174,7 @@ it.
 ## Support the project
 
 If Chunker Studio is useful to you, the cheapest thing you can do is
-[drop a coffee on Ko-fi](https://ko-fi.com/YOUR-KOFI-HANDLE). It's appreciated
+[drop a coffee on Ko-fi](https://ko-fi.com/davesalazar). It's appreciated
 and it doesn't cost more than a coffee.
 
 ---

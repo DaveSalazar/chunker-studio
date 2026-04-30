@@ -23,6 +23,11 @@ export interface DocumentViewerProps {
   activeChunkIndex: number | null;
   duplicateIndices?: ReadonlySet<number>;
   manualMode: boolean;
+  /**
+   * True when this viewer's slot is the visible tab. Forwarded to the
+   * PDF preview so hidden tabs skip the GPU paint.
+   */
+  active?: boolean;
   onChunkClick: (index: number) => void;
   onParse: () => void;
   onChangeView: (view: DocumentView) => void;
@@ -45,6 +50,7 @@ export function DocumentViewer({
   activeChunkIndex,
   duplicateIndices,
   manualMode,
+  active = true,
   onChunkClick,
   onParse,
   onChangeView,
@@ -85,6 +91,7 @@ export function DocumentViewer({
           view={view}
           activeChunkIndex={activeChunkIndex}
           duplicateIndices={duplicateIndices}
+          active={active}
           onChunkClick={onChunkClick}
           onChunkBoundaryChange={onChunkBoundaryChange}
         />
@@ -101,6 +108,7 @@ function ViewerBody({
   view,
   activeChunkIndex,
   duplicateIndices,
+  active,
   onChunkClick,
   onChunkBoundaryChange,
 }: {
@@ -111,6 +119,7 @@ function ViewerBody({
   view: DocumentView;
   activeChunkIndex: number | null;
   duplicateIndices?: ReadonlySet<number>;
+  active: boolean;
   onChunkClick: (index: number) => void;
   onChunkBoundaryChange: (leftArrayIndex: number, newOffset: number) => void;
 }) {
@@ -132,7 +141,7 @@ function ViewerBody({
   return (
     <div className="relative h-full w-full">
       <div className={view === "raw" ? "h-full w-full" : "hidden"}>
-        <RawDocumentView file={file} />
+        <RawDocumentView file={file} active={active && view === "raw"} />
       </div>
       <div className={view === "parsed" ? "h-full w-full" : "hidden"}>
         {parsed ? (

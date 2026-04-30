@@ -143,6 +143,8 @@ export const en = {
     scannedPdfDescription: "This PDF has no text layer — it looks like a scanned image. OCR is not supported, so chunking can't run. Re-export the PDF with a text layer or run OCR before re-opening.",
     pdfLoading: "Loading PDF…",
     pdfFailed: "Could not load the PDF.",
+    pdfPrevPage: "Previous page",
+    pdfNextPage: "Next page",
     docxNoPreview: "DOCX preview is not available — click Parse to extract its text.",
     unsupportedNoPreview: "No preview is available for this format — click Parse to extract its text.",
     textLoading: "Reading file…",

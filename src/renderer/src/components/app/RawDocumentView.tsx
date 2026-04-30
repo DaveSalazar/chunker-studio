@@ -7,17 +7,22 @@ import type { OpenedFile } from "@shared/types";
 
 export interface RawDocumentViewProps {
   file: OpenedFile;
+  /**
+   * Forwarded to PdfPreview so hidden tabs skip the canvas paint. Other
+   * format previews are cheap enough to render unconditionally.
+   */
+  active?: boolean;
 }
 
 /**
  * Picks the right "original" preview for the file's extension. Stateless
  * — purely a dispatcher to per-format components.
  */
-export function RawDocumentView({ file }: RawDocumentViewProps) {
+export function RawDocumentView({ file, active = true }: RawDocumentViewProps) {
   const t = useT();
   const ext = file.extension.toLowerCase();
 
-  if (ext === "pdf") return <PdfPreview filePath={file.path} />;
+  if (ext === "pdf") return <PdfPreview filePath={file.path} active={active} />;
   if (ext === "txt" || ext === "md") return <TextPreview filePath={file.path} />;
 
   return (

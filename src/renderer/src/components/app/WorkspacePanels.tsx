@@ -125,6 +125,7 @@ function ViewerSlot({
         activeChunkIndex={isActive ? activeChunkIndex : null}
         duplicateIndices={isActive ? duplicateIndices : undefined}
         manualMode={doc.manualMode}
+        active={isActive}
         onChunkClick={(i) => onChunkClick(i)}
         onParse={() => onParse(doc.id)}
         onChangeView={(v) => onChangeView(doc.id, v)}
