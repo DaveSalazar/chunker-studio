@@ -4,13 +4,13 @@
   "description": "Desktop tool for inspecting and tuning document chunking pipelines",
   "private": true,
   "license": "MIT",
-  "homepage": "https://github.com/YOUR-HANDLE/chunker-studio",
+  "homepage": "https://github.com/DaveSalazar/chunker-studio",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YOUR-HANDLE/chunker-studio.git"
+    "url": "git+https://github.com/DaveSalazar/chunker-studio.git"
   },
   "bugs": {
-    "url": "https://github.com/YOUR-HANDLE/chunker-studio/issues"
+    "url": "https://github.com/DaveSalazar/chunker-studio/issues"
   },
   "main": "./out/main/index.js",
   "scripts": {

@@ -21,7 +21,7 @@ Requires Node 18+ and a working C toolchain (`better-sqlite3` is a
 native module).
 
 ```bash
-git clone https://github.com/YOUR-HANDLE/chunker-studio.git
+git clone https://github.com/DaveSalazar/chunker-studio.git
 cd chunker-studio
 npm install            # postinstall rebuilds native deps for Electron
 npm run dev            # Electron with hot-reload

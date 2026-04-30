@@ -13,7 +13,7 @@ looks right. Local-first; nothing leaves your machine until you click
 ![Status](https://img.shields.io/badge/status-freeware-brightgreen)
 
 > **Like it?** Chunker Studio is free forever. If it saved you time,
-> consider [buying me a coffee on Ko-fi](https://ko-fi.com/your-handle) —
+> consider [buying me a coffee on Ko-fi](https://ko-fi.com/YOUR-KOFI-HANDLE) —
 > it keeps me motivated to ship more freeware tools.
 
 ---
@@ -68,7 +68,7 @@ Until binaries are published, build from source (see below).
 ## Run from source
 
 ```bash
-git clone https://github.com/[your-handle]/chunker-studio.git
+git clone https://github.com/DaveSalazar/chunker-studio.git
 cd chunker-studio
 npm install
 npm run dev          # Electron with hot-reload
@@ -174,9 +174,9 @@ it.
 ## Support the project
 
 If Chunker Studio is useful to you, the cheapest thing you can do is
-[drop a coffee on Ko-fi](https://ko-fi.com/your-handle). It's appreciated
+[drop a coffee on Ko-fi](https://ko-fi.com/YOUR-KOFI-HANDLE). It's appreciated
 and it doesn't cost more than a coffee.
 
 ---
 
-Made by [Your Name](https://github.com/your-handle).
+Made by [Dave Salazar](https://github.com/DaveSalazar).
