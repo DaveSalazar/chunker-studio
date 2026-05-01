@@ -41,7 +41,13 @@ export function registerParsingHandlers(): void {
         const fileHash = hashBytes(bytes);
 
         const cached = await sessions.getCachedParse(fileHash);
-        if (cached) {
+        // Treat pre-v3 cached PDFs (missing pageOffsets) as a cache
+        // miss so they re-parse once. Without this, chunk → PDF page
+        // navigation silently fails for any PDF that was parsed before
+        // the v3 schema migration shipped.
+        const cacheStale =
+          !!cached && kind === "pdf" && !cached.parsed.pageOffsets;
+        if (cached && !cacheStale) {
           console.log("[parsing] cache hit", fileHash.slice(0, 8));
           // Refresh path/name in case the file moved between runs.
           return {
@@ -50,6 +56,9 @@ export function registerParsingHandlers(): void {
             name: metadata.name,
             extension: metadata.extension,
           };
+        }
+        if (cacheStale) {
+          console.log("[parsing] cache stale (missing pageOffsets), re-parsing");
         }
 
         console.log("[parsing] cache miss; dispatching to worker, bytes=", bytes.length);
@@ -64,6 +73,7 @@ export function registerParsingHandlers(): void {
           extension: metadata.extension,
           text: value.text,
           pageCount: value.pageCount,
+          pageOffsets: value.pageOffsets,
           warnings: value.warnings,
           ...(value.unsupportedReason ? { unsupportedReason: value.unsupportedReason } : {}),
         };

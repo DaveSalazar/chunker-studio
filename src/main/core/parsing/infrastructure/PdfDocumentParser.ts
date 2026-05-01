@@ -31,7 +31,9 @@ export class PdfDocumentParser implements DocumentParser {
     const doc = await loadingTask.promise;
 
     const pages: string[] = [];
+    const pageOffsets: number[] = [];
     const warnings: string[] = [];
+    let cursor = 0;
 
     for (let i = 1; i <= doc.numPages; i++) {
       const page = await doc.getPage(i);
@@ -49,13 +51,17 @@ export class PdfDocumentParser implements DocumentParser {
         }
       }
       if (buffer.trim().length > 0) lines.push(buffer);
-      pages.push(lines.join("\n"));
+      const pageText = lines.join("\n");
+      pageOffsets.push(cursor);
+      pages.push(pageText);
+      cursor += pageText.length;
+      if (i < doc.numPages) cursor += 2;  // for the "\n\n" join separator
     }
 
     const text = pages.join("\n\n");
     if (text.trim().length === 0) {
       warnings.push("Extracted no text — likely a scanned PDF that requires OCR.");
     }
-    return { text, pageCount: doc.numPages, warnings };
+    return { text, pageCount: doc.numPages, pageOffsets, warnings };
   }
 }

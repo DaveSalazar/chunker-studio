@@ -3,6 +3,8 @@ import type {
   ChunkSettings,
   ChunkingResult,
   ConnectionTestResult,
+  ExportRequest,
+  ExportResult,
   FolderEntry,
   FolderSelection,
   IngestProgress,
@@ -76,6 +78,9 @@ export const chunkerClient = {
   },
   onIngestProgress(handler: (progress: IngestProgress) => void): () => void {
     return window.chunker.onIngestProgress(handler);
+  },
+  async exportChunks(request: ExportRequest): Promise<ExportResult> {
+    return unwrap(await window.chunker.exportChunks(request));
   },
 };
 

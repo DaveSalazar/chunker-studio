@@ -15,11 +15,25 @@ export function parsedRowToDomain(row: ParsedRow): ParsedDocument {
     extension: row.extension,
     text: row.text,
     pageCount: row.page_count ?? undefined,
+    pageOffsets: safeParseNumberArray(row.page_offsets_json) ?? undefined,
     warnings: safeParseStringArray(row.warnings_json),
     ...(row.unsupported_reason === "scanned-pdf"
       ? { unsupportedReason: "scanned-pdf" as const }
       : {}),
   };
+}
+
+/** Returns null if the JSON is missing or malformed (pre-v3 cached rows). */
+function safeParseNumberArray(json: string | null): number[] | null {
+  if (!json) return null;
+  try {
+    const parsed = JSON.parse(json);
+    return Array.isArray(parsed) && parsed.every((n) => typeof n === "number")
+      ? parsed
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Build a CachedChunking view-model from a chunking_runs row + its chunks. */

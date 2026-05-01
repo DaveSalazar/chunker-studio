@@ -3,16 +3,14 @@ import { Check, CloudUpload, Copy } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ChunksBody } from "@/components/app/ChunksBody";
 import { DuplicateJumpPill } from "@/components/app/DuplicateJumpPill";
-import {
-  ContextMenu,
-  ContextMenuItem,
-  type ContextMenuPosition,
-} from "@/components/ui/ContextMenu";
+import { ExportMenu } from "@/components/app/ExportMenu";
+import { ContextMenu, ContextMenuItem, type ContextMenuPosition } from "@/components/ui/ContextMenu";
+import { useChunkScrollSync } from "@/hooks/useChunkScrollSync";
 import { hasTextSelection, isFormElementFocused } from "@/lib/clipboardGuards";
 import { useT } from "@/lib/i18n";
 import type { DocumentLoading } from "@/hooks/useChunkerSession";
 import type { DuplicateInfo } from "@/lib/duplicateChunks";
-import type { ChunkRecord, ChunkingResult } from "@shared/types";
+import type { ChunkRecord, ChunkingResult, ParsedDocument } from "@shared/types";
 
 const EMPTY_DUPLICATES: ReadonlyMap<number, DuplicateInfo> = new Map();
 const TOAST_DURATION_MS = 1500;
@@ -23,6 +21,12 @@ export interface ChunksPanelProps {
   loading: DocumentLoading;
   activeChunkIndex: number | null;
   duplicateInfo?: ReadonlyMap<number, DuplicateInfo>;
+  /** Parsed doc — supplies page offsets for the chunk → page mapping. */
+  parsed?: ParsedDocument | null;
+  /** Current PDF page (1-indexed); drives the auto-scroll. */
+  pdfPage?: number;
+  /** Default filename stem for the export save dialog. */
+  sourceName?: string;
   onChunkClick: (index: number) => void;
   onIngest: () => void;
 }
@@ -37,6 +41,9 @@ export function ChunksPanel({
   loading,
   activeChunkIndex,
   duplicateInfo = EMPTY_DUPLICATES,
+  parsed,
+  pdfPage,
+  sourceName,
   onChunkClick,
   onIngest,
 }: ChunksPanelProps) {
@@ -45,6 +52,7 @@ export function ChunksPanel({
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const listRef = useChunkScrollSync({ result, parsed: parsed ?? null, pdfPage, activeChunkIndex });
 
   const findChunk = useCallback(
     (idx: number): ChunkRecord | undefined => chunks.find((c) => c.index === idx),
@@ -75,10 +83,7 @@ export function ChunksPanel({
     [findChunk, showToast, t],
   );
 
-  // Cmd+C / Ctrl+C copies the active chunk. Bail out if a form field is
-  // focused or the user has selected text — those should retain default
-  // browser copy behaviour.
-  useEffect(() => {
+  useEffect(() => {  // Cmd/Ctrl+C copies active chunk; defers to browser on selection/form focus.
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey) || e.key !== "c") return;
       if (activeChunkIndex === null) return;
@@ -115,9 +120,9 @@ export function ChunksPanel({
           />
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Button variant="ghost" size="sm" disabled={!result}>
-            {t("chunks.exportPreview")}
-          </Button>
+          <ExportMenu chunks={chunks} sourceName={sourceName ?? "chunks"}
+            disabled={!result || chunks.length === 0}
+            onExported={(path) => showToast(t("chunks.exported", { path }))} />
           <Button
             variant="primary"
             size="sm"
@@ -138,6 +143,7 @@ export function ChunksPanel({
         duplicateInfo={duplicateInfo}
         onChunkClick={onChunkClick}
         onChunkContextMenu={onChunkContextMenu}
+        listRef={listRef}
       />
 
       <ContextMenu

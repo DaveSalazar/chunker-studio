@@ -5,6 +5,7 @@ import { registerConfigHandlers } from "./config";
 import { registerIngestionHandlers } from "./ingestion";
 import { registerDatabaseHandlers } from "./database";
 import { registerOllamaHandlers } from "./ollama";
+import { registerExportHandlers } from "./export";
 
 export function registerAllHandlers(): void {
   registerFilesystemHandlers();
@@ -14,4 +15,5 @@ export function registerAllHandlers(): void {
   registerIngestionHandlers();
   registerDatabaseHandlers();
   registerOllamaHandlers();
+  registerExportHandlers();
 }

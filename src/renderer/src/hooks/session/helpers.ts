@@ -56,6 +56,7 @@ export function makeDocFromFile(file: OpenedFile): DocumentEntry {
     error: null,
     view: "raw",
     manualMode: false,
+    pdfPage: 1,
   };
 }
 

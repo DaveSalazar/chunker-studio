@@ -5,6 +5,7 @@ export type AnyStatement = Statement<unknown[], unknown>;
 export interface ParsedRow {
   text: string;
   page_count: number | null;
+  page_offsets_json: string | null;
   warnings_json: string;
   path: string;
   name: string;
@@ -48,20 +49,22 @@ export interface SessionStatements {
 export function prepareStatements(db: DatabaseInstance): SessionStatements {
   return {
     getParse: db.prepare(
-      `SELECT text, page_count, warnings_json, path, name, extension, unsupported_reason
+      `SELECT text, page_count, page_offsets_json, warnings_json,
+              path, name, extension, unsupported_reason
        FROM parsed_documents WHERE file_hash = ?`,
     ),
     saveParse: db.prepare(
       `INSERT INTO parsed_documents
-         (file_hash, path, name, extension, text, page_count, warnings_json,
-          unsupported_reason, accessed_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+         (file_hash, path, name, extension, text, page_count, page_offsets_json,
+          warnings_json, unsupported_reason, accessed_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(file_hash) DO UPDATE SET
          path = excluded.path,
          name = excluded.name,
          extension = excluded.extension,
          text = excluded.text,
          page_count = excluded.page_count,
+         page_offsets_json = excluded.page_offsets_json,
          warnings_json = excluded.warnings_json,
          unsupported_reason = excluded.unsupported_reason,
          accessed_at = excluded.accessed_at`,

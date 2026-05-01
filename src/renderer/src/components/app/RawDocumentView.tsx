@@ -12,17 +12,33 @@ export interface RawDocumentViewProps {
    * format previews are cheap enough to render unconditionally.
    */
   active?: boolean;
+  /** Controlled PDF page (forwarded to PdfPreview). */
+  pdfPage?: number;
+  onPdfPageChange?: (page: number) => void;
 }
 
 /**
  * Picks the right "original" preview for the file's extension. Stateless
  * — purely a dispatcher to per-format components.
  */
-export function RawDocumentView({ file, active = true }: RawDocumentViewProps) {
+export function RawDocumentView({
+  file,
+  active = true,
+  pdfPage,
+  onPdfPageChange,
+}: RawDocumentViewProps) {
   const t = useT();
   const ext = file.extension.toLowerCase();
 
-  if (ext === "pdf") return <PdfPreview filePath={file.path} active={active} />;
+  if (ext === "pdf")
+    return (
+      <PdfPreview
+        filePath={file.path}
+        active={active}
+        pageNum={pdfPage}
+        onPageChange={onPdfPageChange}
+      />
+    );
   if (ext === "txt" || ext === "md") return <TextPreview filePath={file.path} />;
 
   return (

@@ -11,6 +11,7 @@ import {
   ResizablePanelGroup,
   ResizeHandle,
 } from "@/components/ui/ResizablePanels";
+import { useChunkClickWithPdfNav } from "@/hooks/useChunkClickWithPdfNav";
 import { useChunkerSession } from "@/hooks/useChunkerSession";
 import { countOverrides, useEffectiveResult } from "@/hooks/useEffectiveResult";
 import { useTheme } from "@/lib/theme";
@@ -39,17 +40,8 @@ export default function App() {
     else panel.collapse();
   };
 
-  const {
-    documents,
-    activeId,
-    active: activeDoc,
-    effectiveSettings,
-    hasOverride,
-    scope,
-    totals,
-    folder,
-    parsedPaths,
-  } = session;
+  const { documents, activeId, active: activeDoc, effectiveSettings,
+    hasOverride, scope, totals, folder, parsedPaths } = session;
 
   const file = activeDoc?.file ?? null;
   const { duplicateInfo, duplicateIndices, effectiveResult } = useEffectiveResult(
@@ -59,6 +51,12 @@ export default function App() {
 
   const hasAnyDocs = documents.length > 0;
   const overrideCount = countOverrides(documents);
+  const handleChunkClick = useChunkClickWithPdfNav(
+    setActiveChunkIndex,
+    activeDoc,
+    effectiveResult,
+    session.setPdfPage,
+  );
 
   return (
     <div className="flex h-full flex-col bg-background">
@@ -136,7 +134,7 @@ export default function App() {
                   duplicateIndices={duplicateIndices}
                   tempId={session.tempId}
                   activeChunkIndex={activeChunkIndex}
-                  onChunkClick={setActiveChunkIndex}
+                  onChunkClick={handleChunkClick}
                   onSelectTab={session.setActive}
                   onCloseTab={session.closeDocument}
                   onAddTab={session.openFiles}
@@ -145,6 +143,7 @@ export default function App() {
                   onChangeView={session.setDocumentView}
                   onChunkBoundaryChange={session.setChunkBoundary}
                   onResetToAuto={session.resetToAuto}
+                  onPdfPageChange={session.setPdfPage}
                   onIngest={() => {
                     if (activeId) session.promoteTemp(activeId);
                     setIngestOpen(true);

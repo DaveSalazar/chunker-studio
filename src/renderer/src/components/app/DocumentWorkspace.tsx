@@ -47,6 +47,7 @@ export interface DocumentWorkspaceProps {
   onChangeView: ChunkerSession["setDocumentView"];
   onChunkBoundaryChange: ChunkerSession["setChunkBoundary"];
   onResetToAuto: ChunkerSession["resetToAuto"];
+  onPdfPageChange: ChunkerSession["setPdfPage"];
   onIngest: () => void;
 }
 
@@ -71,6 +72,7 @@ export function DocumentWorkspace({
   onChangeView,
   onChunkBoundaryChange,
   onResetToAuto,
+  onPdfPageChange,
   onIngest,
 }: DocumentWorkspaceProps) {
   const t = useT();
@@ -131,6 +133,7 @@ export function DocumentWorkspace({
             onChangeView={onChangeView}
             onChunkBoundaryChange={onChunkBoundaryChange}
             onResetToAuto={onResetToAuto}
+            onPdfPageChange={onPdfPageChange}
             onIngest={onIngest}
           />
         )}

@@ -14,12 +14,11 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
 
 export interface PdfPreviewProps {
   filePath: string;
-  /**
-   * When false, the canvas isn't (re)drawn. The PDFDocumentProxy stays
-   * alive across tab switches so re-activating is instant — only the
-   * GPU-bound paint is gated by `active`.
-   */
+  /** Skips canvas paint when false (hidden tabs). Doc stays loaded. */
   active?: boolean;
+  /** Controlled page (1-indexed). Pair with `onPageChange`. Storybook may omit. */
+  pageNum?: number;
+  onPageChange?: (page: number) => void;
 }
 
 /**
@@ -27,14 +26,22 @@ export interface PdfPreviewProps {
  * cheaper than mounting a full Chromium PDF iframe per tab, which used
  * to balloon GPU memory once a few large PDFs were open.
  */
-export function PdfPreview({ filePath, active = true }: PdfPreviewProps) {
+export function PdfPreview({
+  filePath,
+  active = true,
+  pageNum: controlledPage,
+  onPageChange,
+}: PdfPreviewProps) {
   const t = useT();
   const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
-  const [pageNum, setPageNum] = useState(1);
+  const [internalPage, setInternalPage] = useState(1);
   const [pageInput, setPageInput] = useState("1");
   const [error, setError] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const controlled = controlledPage !== undefined && onPageChange !== undefined;
+  const pageNum = controlled ? controlledPage : internalPage;
 
   // Load the document whenever filePath changes; destroy on unmount.
   useEffect(() => {
@@ -42,8 +49,6 @@ export function PdfPreview({ filePath, active = true }: PdfPreviewProps) {
     let task: ReturnType<typeof pdfjsLib.getDocument> | null = null;
     let openedDoc: PDFDocumentProxy | null = null;
     setPdf(null);
-    setPageNum(1);
-    setPageInput("1");
     setError(null);
     (async () => {
       try {
@@ -69,6 +74,11 @@ export function PdfPreview({ filePath, active = true }: PdfPreviewProps) {
       openedDoc?.destroy();
     };
   }, [filePath]);
+
+  // Keep the page-input string in sync with whatever's authoritative.
+  useEffect(() => {
+    setPageInput(String(pageNum));
+  }, [pageNum]);
 
   // Paint the active page. Skipped when the slot is hidden (inactive
   // tab) so we don't burn GPU cycles drawing offscreen pixels.
@@ -132,12 +142,14 @@ export function PdfPreview({ filePath, active = true }: PdfPreviewProps) {
 
   const total = pdf.numPages;
   const goTo = (n: number) => {
-    setPageNum(n);
-    setPageInput(String(n));
+    const clamped = Math.min(total, Math.max(1, n));
+    if (controlled) onPageChange!(clamped);
+    else setInternalPage(clamped);
+    // pageInput is auto-synced via the [pageNum] effect.
   };
   const commit = () => {
     const parsed = parseInt(pageInput, 10);
-    if (Number.isFinite(parsed) && parsed >= 1 && parsed <= total) goTo(parsed);
+    if (parsed >= 1 && parsed <= total) goTo(parsed);
     else setPageInput(String(pageNum));
   };
 
@@ -149,8 +161,8 @@ export function PdfPreview({ filePath, active = true }: PdfPreviewProps) {
         totalPages={total}
         onPageInputChange={setPageInput}
         onCommit={commit}
-        onPrev={() => goTo(Math.max(1, pageNum - 1))}
-        onNext={() => goTo(Math.min(total, pageNum + 1))}
+        onPrev={() => goTo(pageNum - 1)}
+        onNext={() => goTo(pageNum + 1)}
         prevLabel={t("viewer.pdfPrevPage")}
         nextLabel={t("viewer.pdfNextPage")}
       />

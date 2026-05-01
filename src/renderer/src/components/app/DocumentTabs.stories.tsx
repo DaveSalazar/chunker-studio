@@ -62,6 +62,7 @@ function makeDoc(
     error: null,
     view: "raw",
     manualMode: false,
+    pdfPage: 1,
   };
 }
 

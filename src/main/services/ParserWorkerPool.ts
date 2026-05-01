@@ -16,6 +16,7 @@ interface ParseSuccess {
   value: {
     text: string;
     pageCount?: number;
+    pageOffsets?: number[];
     warnings: string[];
     unsupportedReason?: UnsupportedParseReason;
   };

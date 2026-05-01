@@ -4,6 +4,8 @@ import type {
   ChunkSettings,
   ChunkingResult,
   ConnectionTestResult,
+  ExportRequest,
+  ExportResult,
   FolderEntry,
   FolderSelection,
   IngestProgress,
@@ -56,6 +58,8 @@ const api = {
 
   ingest: (request: IngestStartRequest): Promise<IpcResult<IngestSummary>> =>
     ipcRenderer.invoke("ingest:run", request),
+  exportChunks: (request: ExportRequest): Promise<IpcResult<ExportResult>> =>
+    ipcRenderer.invoke("chunks:export", request),
   /**
    * Subscribe to ingest progress events. Returns an unsubscribe
    * function so the renderer can detach when its component unmounts.

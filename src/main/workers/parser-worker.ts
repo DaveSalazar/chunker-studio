@@ -36,6 +36,12 @@ interface ParseSuccess {
   value: {
     text: string;
     pageCount?: number;
+    /**
+     * `pageOffsets[i]` is the char offset in `text` where page `i+1`
+     * starts (0-indexed array). Empty for non-PDF formats. Used by the
+     * renderer to jump the PDF preview to the page a chunk lives on.
+     */
+    pageOffsets?: number[];
     warnings: string[];
     unsupportedReason?: UnsupportedParseReason;
   };
@@ -68,7 +74,9 @@ async function parsePdf(bytes: Uint8Array): Promise<ParseSuccess["value"]> {
   });
   const doc = await loadingTask.promise;
   const pages: string[] = [];
+  const pageOffsets: number[] = [];
   const warnings: string[] = [];
+  let cursor = 0;
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i);
     const content = await page.getTextContent();
@@ -85,7 +93,13 @@ async function parsePdf(bytes: Uint8Array): Promise<ParseSuccess["value"]> {
       }
     }
     if (buffer.trim().length > 0) lines.push(buffer);
-    pages.push(lines.join("\n"));
+    const pageText = lines.join("\n");
+    pageOffsets.push(cursor);
+    pages.push(pageText);
+    cursor += pageText.length;
+    // pages.join("\n\n") inserts the 2-char separator between pages
+    // but not after the last one — keep the cumulative cursor in sync.
+    if (i < doc.numPages) cursor += 2;
   }
   const text = pages.join("\n\n");
   const trimmedLen = text.trim().length;
@@ -99,7 +113,7 @@ async function parsePdf(bytes: Uint8Array): Promise<ParseSuccess["value"]> {
       unsupportedReason: "scanned-pdf",
     };
   }
-  return { text, pageCount: doc.numPages, warnings };
+  return { text, pageCount: doc.numPages, pageOffsets, warnings };
 }
 
 async function parseDocx(bytes: Uint8Array): Promise<ParseSuccess["value"]> {

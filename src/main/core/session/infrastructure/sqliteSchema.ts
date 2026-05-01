@@ -1,6 +1,6 @@
 import type { Database as DatabaseInstance } from "better-sqlite3";
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 const CREATE_SQL = `
   CREATE TABLE IF NOT EXISTS schema_meta (
@@ -14,6 +14,7 @@ const CREATE_SQL = `
     extension TEXT NOT NULL,
     text TEXT NOT NULL,
     page_count INTEGER,
+    page_offsets_json TEXT,
     warnings_json TEXT NOT NULL DEFAULT '[]',
     unsupported_reason TEXT,
     accessed_at INTEGER NOT NULL
@@ -66,6 +67,15 @@ export function migrate(db: DatabaseInstance): void {
       db.exec("ALTER TABLE parsed_documents ADD COLUMN unsupported_reason TEXT");
     }
     db.prepare("UPDATE schema_meta SET value = ? WHERE key = 'version'").run(2);
+  }
+  if (current < 3) {
+    // v2 → v3: add page_offsets_json for chunk → PDF page jumps. Pre-v3
+    // cached parses come back with `pageOffsets` undefined; the renderer
+    // silently disables click-to-page until they're re-parsed.
+    if (!columnExists(db, "parsed_documents", "page_offsets_json")) {
+      db.exec("ALTER TABLE parsed_documents ADD COLUMN page_offsets_json TEXT");
+    }
+    db.prepare("UPDATE schema_meta SET value = ? WHERE key = 'version'").run(3);
   }
 }
 

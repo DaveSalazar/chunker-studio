@@ -28,6 +28,8 @@ export interface WorkspacePanelsProps {
   onChunkBoundaryChange: ChunkerSession["setChunkBoundary"];
   onResetToAuto: ChunkerSession["resetToAuto"];
   onIngest: () => void;
+  /** Updates a doc's PDF page (driven by chunk clicks + prev/next). */
+  onPdfPageChange: ChunkerSession["setPdfPage"];
 }
 
 /**
@@ -111,6 +113,7 @@ function ViewerSlot({
   onChangeView,
   onChunkBoundaryChange,
   onResetToAuto,
+  onPdfPageChange,
 }: SlotBaseProps) {
   const result = isActive ? effectiveResult : doc.result;
   return (
@@ -126,6 +129,8 @@ function ViewerSlot({
         duplicateIndices={isActive ? duplicateIndices : undefined}
         manualMode={doc.manualMode}
         active={isActive}
+        pdfPage={doc.pdfPage}
+        onPdfPageChange={(page) => onPdfPageChange(doc.id, page)}
         onChunkClick={(i) => onChunkClick(i)}
         onParse={() => onParse(doc.id)}
         onChangeView={(v) => onChangeView(doc.id, v)}
@@ -154,6 +159,9 @@ function ChunksSlot({
         loading={doc.loading}
         activeChunkIndex={isActive ? activeChunkIndex : null}
         duplicateInfo={isActive ? duplicateInfo : undefined}
+        parsed={doc.parsed}
+        pdfPage={doc.pdfPage}
+        sourceName={doc.file.name}
         onChunkClick={(i) => onChunkClick(i)}
         onIngest={onIngest}
       />

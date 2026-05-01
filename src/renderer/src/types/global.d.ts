@@ -3,6 +3,8 @@ import type {
   ChunkSettings,
   ChunkingResult,
   ConnectionTestResult,
+  ExportRequest,
+  ExportResult,
   FolderEntry,
   FolderSelection,
   IngestProgress,
@@ -36,6 +38,7 @@ export interface ChunkerApi {
 
   ingest: (request: IngestStartRequest) => Promise<IpcResult<IngestSummary>>;
   onIngestProgress: (handler: (progress: IngestProgress) => void) => () => void;
+  exportChunks: (request: ExportRequest) => Promise<IpcResult<ExportResult>>;
 }
 
 declare global {

@@ -8,6 +8,12 @@ export interface ParsedDocument {
   extension: string;
   text: string;
   pageCount?: number;
+  /**
+   * `pageOffsets[i]` is the char offset in `text` where page `i+1`
+   * starts. Populated for PDFs; empty for DOCX / TXT / MD. Lets the
+   * renderer jump the PDF preview to the page a chunk lives on.
+   */
+  pageOffsets?: number[];
   warnings: string[];
   /**
    * Set when parsing technically succeeded but the document can't be

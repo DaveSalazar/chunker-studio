@@ -167,6 +167,13 @@ export const en = {
     copied: "Chunk #{index} copied",
     duplicates: "{count} duplicates",
     jumpToDuplicate: "Jump to next duplicate chunk",
+    exportTitle: "Export the visible chunks to a file",
+    exportFormatJson: "JSON",
+    exportFormatJsonl: "JSON Lines",
+    exportFormatCsv: "CSV",
+    exportFormatMarkdown: "Markdown",
+    exportFormatPlaintext: "Plain text",
+    exported: "Exported to {path}",
   },
   preferences: {
     title: "Preferences",

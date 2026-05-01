@@ -7,10 +7,7 @@ import { RawDocumentView } from "@/components/app/RawDocumentView";
 import { SourcePreview } from "@/components/app/SourcePreview";
 import { ViewerTabs } from "@/components/app/ViewerTabs";
 import { useT } from "@/lib/i18n";
-import type {
-  DocumentLoading,
-  DocumentView,
-} from "@/hooks/useChunkerSession";
+import type { DocumentLoading, DocumentView } from "@/hooks/useChunkerSession";
 import type { ChunkRecord, OpenedFile, ParsedDocument } from "@shared/types";
 
 export interface DocumentViewerProps {
@@ -23,11 +20,11 @@ export interface DocumentViewerProps {
   activeChunkIndex: number | null;
   duplicateIndices?: ReadonlySet<number>;
   manualMode: boolean;
-  /**
-   * True when this viewer's slot is the visible tab. Forwarded to the
-   * PDF preview so hidden tabs skip the GPU paint.
-   */
+  /** True when this viewer's slot is the visible tab; gates PDF GPU paint. */
   active?: boolean;
+  /** Controlled PDF page (1-indexed). Per-doc in session state. */
+  pdfPage?: number;
+  onPdfPageChange?: (page: number) => void;
   onChunkClick: (index: number) => void;
   onParse: () => void;
   onChangeView: (view: DocumentView) => void;
@@ -51,6 +48,8 @@ export function DocumentViewer({
   duplicateIndices,
   manualMode,
   active = true,
+  pdfPage,
+  onPdfPageChange,
   onChunkClick,
   onParse,
   onChangeView,
@@ -92,6 +91,8 @@ export function DocumentViewer({
           activeChunkIndex={activeChunkIndex}
           duplicateIndices={duplicateIndices}
           active={active}
+          pdfPage={pdfPage}
+          onPdfPageChange={onPdfPageChange}
           onChunkClick={onChunkClick}
           onChunkBoundaryChange={onChunkBoundaryChange}
         />
@@ -109,6 +110,8 @@ function ViewerBody({
   activeChunkIndex,
   duplicateIndices,
   active,
+  pdfPage,
+  onPdfPageChange,
   onChunkClick,
   onChunkBoundaryChange,
 }: {
@@ -120,6 +123,8 @@ function ViewerBody({
   activeChunkIndex: number | null;
   duplicateIndices?: ReadonlySet<number>;
   active: boolean;
+  pdfPage?: number;
+  onPdfPageChange?: (page: number) => void;
   onChunkClick: (index: number) => void;
   onChunkBoundaryChange: (leftArrayIndex: number, newOffset: number) => void;
 }) {
@@ -136,12 +141,16 @@ function ViewerBody({
     );
   }
   // Both panes stay mounted; toggling `view` only flips visibility so
-  // the PDF iframe keeps its scroll/zoom/page across tab switches and
-  // the renderer doesn't re-fetch bytes on every toggle.
+  // PDF page + parsed-text scroll all survive a switch.
   return (
     <div className="relative h-full w-full">
       <div className={view === "raw" ? "h-full w-full" : "hidden"}>
-        <RawDocumentView file={file} active={active && view === "raw"} />
+        <RawDocumentView
+          file={file}
+          active={active && view === "raw"}
+          pdfPage={pdfPage}
+          onPdfPageChange={onPdfPageChange}
+        />
       </div>
       <div className={view === "parsed" ? "h-full w-full" : "hidden"}>
         {parsed ? (

@@ -181,6 +181,13 @@ export const es: Translations = {
     copied: "Chunk #{index} copiado",
     duplicates: "{count} duplicados",
     jumpToDuplicate: "Ir al siguiente chunk duplicado",
+    exportTitle: "Exportar los chunks visibles a un archivo",
+    exportFormatJson: "JSON",
+    exportFormatJsonl: "JSON Lines",
+    exportFormatCsv: "CSV",
+    exportFormatMarkdown: "Markdown",
+    exportFormatPlaintext: "Texto plano",
+    exported: "Exportado a {path}",
   },
   preferences: {
     title: "Preferencias",

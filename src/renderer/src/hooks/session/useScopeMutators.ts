@@ -15,6 +15,7 @@ export interface ScopeMutators {
   setSettings: (next: ChunkSettings) => void;
   clearOverride: () => void;
   setDocumentView: (id: string, view: DocumentView) => void;
+  setPdfPage: (id: string, page: number) => void;
 }
 
 /**
@@ -70,5 +71,16 @@ export function useScopeMutators(setState: SetState): ScopeMutators {
     [setState],
   );
 
-  return { setActive, setScope, setSettings, clearOverride, setDocumentView };
+  const setPdfPage = useCallback(
+    (id: string, page: number) => {
+      setState((s) => {
+        const doc = s.documents.find((d) => d.id === id);
+        if (!doc || doc.pdfPage === page) return s;
+        return updateDocById(s, id, { pdfPage: page });
+      });
+    },
+    [setState],
+  );
+
+  return { setActive, setScope, setSettings, clearOverride, setDocumentView, setPdfPage };
 }

@@ -3,6 +3,12 @@ export type UnsupportedParseReason = "scanned-pdf";
 export interface ParsedDocument {
   text: string;
   pageCount?: number;
+  /**
+   * `pageOffsets[i]` is the char offset in `text` where page `i+1`
+   * starts. Empty for non-PDF formats. Drives chunk → PDF page jumps
+   * in the renderer.
+   */
+  pageOffsets?: number[];
   warnings: string[];
   unsupportedReason?: UnsupportedParseReason;
 }

@@ -34,6 +34,12 @@ export interface DocumentEntry {
    * longer touch the chunks for this doc until `resetToAuto` is called.
    */
   manualMode: boolean;
+  /**
+   * Current page in the PDF preview (1-indexed). Tracked per-doc so
+   * switching tabs preserves scroll position, and so clicking a chunk
+   * can navigate the PDF to its corresponding page.
+   */
+  pdfPage: number;
 }
 
 export interface FolderState {
@@ -99,6 +105,8 @@ export interface ChunkerSession extends ChunkerSessionState {
   parseDocument: (id: string) => void;
   /** Switch a document between the original (raw) view and the parsed/chunked view. */
   setDocumentView: (id: string, view: DocumentView) => void;
+  /** Move the PDF preview to a specific page (1-indexed). Per-doc. */
+  setPdfPage: (id: string, page: number) => void;
   /**
    * Move the boundary between two adjacent chunks. `chunkIndex` is the
    * left chunk's index; the right chunk is the next non-null sibling.

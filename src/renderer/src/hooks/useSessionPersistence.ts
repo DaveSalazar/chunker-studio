@@ -104,6 +104,7 @@ function sanitizeDocs(input: PersistedDoc[] | undefined): DocumentEntry[] {
       error: null,
       view: d.view === "parsed" ? "parsed" : "raw",
       manualMode: !!d.manualMode,
+      pdfPage: 1,
     }));
 }
 

@@ -84,6 +84,7 @@ const ready = (file: OpenedFile, id: string): DocumentEntry => ({
   error: null,
   view: "parsed",
   manualMode: false,
+  pdfPage: 1,
 });
 
 const unparsed = (file: OpenedFile, id: string): DocumentEntry => ({
@@ -96,6 +97,7 @@ const unparsed = (file: OpenedFile, id: string): DocumentEntry => ({
   error: null,
   view: "raw",
   manualMode: false,
+  pdfPage: 1,
 });
 
 const Frame = ({ children }: { children: React.ReactNode }) => (
@@ -112,6 +114,7 @@ const noopHandlers = {
   onChangeView: () => {},
   onChunkBoundaryChange: () => {},
   onResetToAuto: () => {},
+  onPdfPageChange: () => {},
   onIngest: () => {},
 };
 
