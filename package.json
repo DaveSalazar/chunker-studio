@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "Desktop tool for inspecting and tuning document chunking pipelines",
   "private": true,
+  "author": {
+    "name": "Dave Salazar",
+    "email": "salazardave93@gmail.com"
+  },
   "license": "MIT",
   "homepage": "https://github.com/DaveSalazar/chunker-studio",
   "repository": {
