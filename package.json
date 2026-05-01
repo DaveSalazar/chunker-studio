@@ -1,6 +1,6 @@
 {
   "name": "chunker-studio",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Desktop tool for inspecting and tuning document chunking pipelines",
   "private": true,
   "author": {
