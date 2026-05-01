@@ -9,6 +9,13 @@ files:
   - "!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}"
   - "!storybook-static/*"
   - "!.storybook/*"
+# Copies the logos into the packaged app's Resources folder so the
+# main process can load them at runtime via `process.resourcesPath`.
+extraResources:
+  - from: resources/logo.png
+    to: logo.png
+  - from: resources/logo-title.png
+    to: logo-title.png
 mac:
   target:
     - target: dmg
@@ -16,21 +23,29 @@ mac:
     - target: zip
       arch: [universal]
   category: public.app-category.developer-tools
+  # 1024×1024 PNG; electron-builder auto-generates the multi-resolution
+  # .icns at package time. No need to ship the .icns in source control.
+  icon: resources/logo.png
 win:
   target:
     - nsis
     - zip
+  icon: resources/logo.png
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: Chunker Studio
   uninstallDisplayName: Chunker Studio
   oneClick: false
   allowToChangeInstallationDirectory: true
+  installerIcon: resources/logo.png
+  uninstallerIcon: resources/logo.png
+  installerHeaderIcon: resources/logo.png
 linux:
   target:
     - AppImage
     - deb
   category: Development
+  icon: resources/logo.png
 # Publishes built artifacts straight to GitHub Releases. The repository
 # is matched against `package.json` "repository.url" — make sure that
 # field is up to date if you transfer the repo or rename the owner.

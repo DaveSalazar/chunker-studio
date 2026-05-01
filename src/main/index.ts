@@ -1,7 +1,27 @@
-import { app, BrowserWindow, shell } from "electron";
+import { app, BrowserWindow, nativeImage, shell } from "electron";
 import { electronApp, is, optimizer } from "@electron-toolkit/utils";
-import { join } from "path";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { registerAllHandlers } from "./ipc/registerHandlers";
+
+/**
+ * Resolve the runtime logo PNG.
+ *
+ * - **Dev**: the main bundle runs from `out/main/`, so the project's
+ *   `resources/` folder is two levels up.
+ * - **Packaged**: electron-builder's `extraResources` block copies the
+ *   logos into the app's Resources directory, accessed via
+ *   `process.resourcesPath`.
+ *
+ * macOS ignores `BrowserWindow.icon` entirely — the Dock + Cmd-Tab
+ * always read from the app bundle's `.icns` in packaged builds, and
+ * from Electron's default in dev. We work around that below by calling
+ * `app.dock.setIcon` once `app.whenReady()` resolves, which overrides
+ * the dev-time default with our PNG.
+ */
+const ICON_PATH = is.dev
+  ? join(__dirname, "../../resources/logo.png")
+  : join(process.resourcesPath, "logo.png");
 
 function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
@@ -17,6 +37,7 @@ function createWindow(): BrowserWindow {
     autoHideMenuBar: true,
     titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "default",
     backgroundColor: "#0b0c10",
+    icon: ICON_PATH,
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
       // Defence-in-depth: even with contextIsolation, a sandboxed
@@ -45,8 +66,28 @@ function createWindow(): BrowserWindow {
   return win;
 }
 
+/**
+ * Force-set the Dock icon on macOS so dev mode doesn't fall back to
+ * Electron's default. In packaged builds the bundle's .icns wins, but
+ * setting it again here is a harmless no-op.
+ */
+function setMacDockIcon(): void {
+  if (process.platform !== "darwin" || !app.dock) return;
+  if (!existsSync(ICON_PATH)) {
+    console.warn("[icon] PNG not found at", ICON_PATH);
+    return;
+  }
+  const image = nativeImage.createFromPath(ICON_PATH);
+  if (image.isEmpty()) {
+    console.warn("[icon] failed to load PNG at", ICON_PATH);
+    return;
+  }
+  app.dock.setIcon(image);
+}
+
 app.whenReady().then(() => {
   electronApp.setAppUserModelId("com.solintsoft.chunkerstudio");
+  setMacDockIcon();
 
   app.on("browser-window-created", (_, win) => {
     optimizer.watchWindowShortcuts(win);

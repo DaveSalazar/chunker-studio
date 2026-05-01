@@ -1,6 +1,8 @@
-# Chunker Studio
+<p align="center">
+  <img src="resources/logo-title.png" alt="Chunker Studio" width="320" />
+</p>
 
-> Preview every chunk before you embed.
+<p align="center"><em>Preview every chunk before you embed.</em></p>
 
 Chunker Studio is a free desktop tool for slicing article-based
 documents — codes, regulations, contracts, manuals, anything organized

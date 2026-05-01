@@ -3,6 +3,7 @@ import { FileUp, FileType2, FileText, Hash } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
+import logoTitleUrl from "@/assets/logo-title.png";
 
 export interface DropzoneProps {
   onPickFile?: () => void;
@@ -45,9 +46,12 @@ export function Dropzone({ onPickFile, onFilesDropped }: DropzoneProps) {
           "scale-[1.01] border-primary/60 bg-primary/5 shadow-[0_0_0_4px_hsl(var(--primary)/0.08)]",
       )}
     >
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
-        <FileUp className="h-7 w-7" />
-      </div>
+      <img
+        src={logoTitleUrl}
+        alt="Chunker Studio"
+        className="h-32 w-auto select-none"
+        draggable={false}
+      />
 
       <div className="flex flex-col items-center gap-2 text-center">
         <h2 className="text-balance text-xl font-semibold">{t("dropzone.title")}</h2>

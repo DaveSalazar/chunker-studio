@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
+import logoUrl from "@/assets/logo.png";
 
 export interface TopBarProps {
   documentName?: string;
@@ -56,9 +57,13 @@ export function TopBar({
             {sidebarVisible ? <PanelLeftClose /> : <PanelLeftOpen />}
           </Button>
         )}
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/15 text-primary">
-          <FileText className="h-4 w-4" />
-        </div>
+        <img
+          src={logoUrl}
+          alt=""
+          aria-hidden
+          className="h-8 w-8 shrink-0 select-none"
+          draggable={false}
+        />
         <div className="flex flex-col leading-tight">
           <span className="text-sm font-semibold">{t("app.name")}</span>
           <span className="text-[11px] text-muted-foreground">{t("app.subtitle")}</span>
