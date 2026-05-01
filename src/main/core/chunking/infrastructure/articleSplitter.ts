@@ -3,12 +3,19 @@ import type { ChunkSettings, RawChunk } from "../domain/ChunkingEntities";
 // Article markers anchored to start-of-line so a mid-sentence "Art. 5"
 // citation isn't mistaken for a chunk boundary. The number capture
 // accepts dotted notation ("Art. 140.1.-") used for sub-articles added
-// by reform — the COOTAD code is a heavy user.
+// by reform — the COOTAD code is a heavy user. PARTE comes before
+// PART in the alternation: alternation is left-greedy, and PART would
+// otherwise short-circuit a Spanish "PARTE I" match.
 const ARTICLE_PATTERN =
-  /(?:^|\n)(?:Art(?:ículo|iculo)?\.?\s*)(\d+(?:\.\d+)*[A-Z]?)[\.\-\s]/gi;
+  /(?:^|\n)(?:Art(?:ículo|iculo|icle)?\.?|Sec(?:tion)?\.?|§)\s*(\d+(?:\.\d+)*[A-Z]?)[\.\-\s:]/gi;
 
+// `DISPOSICI[OÓ]N(?:ES)?` covers all four forms commonly seen in
+// Spanish legal codes: DISPOSICION, DISPOSICIÓN (singular, with/without
+// accent stripped), DISPOSICIONES, DISPOSICIÓNES (plural). The earlier
+// pattern matched only the singular forms because `\b` after
+// `DISPOSICIÓN` failed against `DISPOSICIONES`.
 export const HEADING_PATTERN =
-  /^(CAPÍTULO|SECCIÓN|TÍTULO|LIBRO|PARTE|DISPOSICION|DISPOSICIÓN)\b/i;
+  /^(CAPÍTULO|SECCIÓN|TÍTULO|LIBRO|PARTE|DISPOSICI[OÓ]N(?:ES)?|CHAPTER|SECTION|TITLE|BOOK|PART)\b/i;
 
 // Lettered-point markers inside long articles ("a)", "b)", ...). Used
 // as preferred split boundaries when an article exceeds the char

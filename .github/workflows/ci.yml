@@ -40,3 +40,18 @@ jobs:
 
       - name: Build (electron-vite)
         run: npm run build
+
+      - name: Test + coverage gate (≥70% statements / branches / functions / lines)
+        # Vitest exits non-zero when any of the four coverage thresholds
+        # in `vitest.config.ts` is breached, which fails the PR check.
+        run: npm run test:coverage
+
+      - name: Upload coverage HTML report
+        # Available as a downloadable artifact on the PR's CI tab so you
+        # can drill into uncovered lines without rerunning locally.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: coverage/
+          retention-days: 14
