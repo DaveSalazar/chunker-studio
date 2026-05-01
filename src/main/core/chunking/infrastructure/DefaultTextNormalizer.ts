@@ -2,7 +2,7 @@ import { injectable } from "inversify";
 import type { NormalizeOptions, TextNormalizer } from "../domain/TextNormalizer";
 
 /**
- * Text normalization for legal-document chunking.
+ * Text normalization for article-based document chunking.
  *
  * Pipeline:
  *   1. NFC unicode canonicalization

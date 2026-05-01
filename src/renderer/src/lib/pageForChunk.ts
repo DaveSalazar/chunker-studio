@@ -8,7 +8,7 @@ import type { ChunkRecord, ParsedDocument } from "@shared/types";
  * to the other and binary-search the page table. The normalizer's
  * mutations (dehyphenation, dropped noise lines, whitespace collapse)
  * change length by a small per-page percentage, so the proportional
- * mapping stays accurate within a page or two on long legal-code PDFs.
+ * mapping stays accurate within a page or two on long article-based PDFs.
  *
  * Returns `null` when we can't compute a page (non-PDF source, no
  * `pageOffsets`, or zero-length text).

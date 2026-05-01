@@ -23,7 +23,7 @@ export const en = {
   dropzone: {
     title: "Drop a document to start chunking",
     description:
-      "Open a legal document and Chunker Studio will preview how it will be split, normalized, and embedded — without writing anything to the corpus yet.",
+      "Open an article-based document and Chunker Studio will preview how it will be split, normalized, and embedded — without writing anything to the corpus yet.",
     selectFile: "Select a file",
     pdfLabel: "PDF",
     wordLabel: "Word",

@@ -20,7 +20,7 @@ export const es: Translations = {
   dropzone: {
     title: "Arrastra un documento para empezar",
     description:
-      "Abre un documento legal y Chunker Studio mostrará cómo se va a dividir, normalizar y embedder — sin escribir nada al corpus.",
+      "Abre un documento estructurado por artículos y Chunker Studio mostrará cómo se va a dividir, normalizar y embedder — sin escribir nada al corpus.",
     selectFile: "Seleccionar archivo",
     pdfLabel: "PDF",
     wordLabel: "Word",

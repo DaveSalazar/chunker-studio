@@ -14,7 +14,7 @@ import { chunkByParagraphs } from "./paragraphSplitter";
 import { isUseful, scoreChunks } from "./chunkFinalize";
 
 /**
- * Article-aware chunking strategy for legal codes.
+ * Article-aware chunking strategy for documents structured by `Art. N` markers.
  *
  *   normalize → detect Art. N markers
  *     ≥ 3 markers AND splitByArticle  → article-aware split (with heading lookback)

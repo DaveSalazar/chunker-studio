@@ -9,10 +9,13 @@ export type { AppConfig } from "../../../../shared/types";
  */
 export const DEFAULT_PROFILES: SchemaProfile[] = [
   {
+    // The id stays `legal-references` to preserve any persisted user
+    // configs that reference it; only the user-facing name + description
+    // were genericized so the tool reads as broader than just law.
     id: "legal-references",
-    name: "Legal references",
+    name: "Article-based references",
     description:
-      "Codes, laws, regulations, jurisprudence — article-aware chunking against the corpus_chunks table.",
+      "Codes, regulations, contracts, technical manuals — article-aware chunking against the corpus_chunks table.",
     table: "corpus_chunks",
     textColumn: "text",
     embeddingColumn: "embedding",
@@ -55,9 +58,9 @@ export const DEFAULT_PROFILES: SchemaProfile[] = [
   },
   {
     id: "legal-templates",
-    name: "Legal templates",
+    name: "Document templates",
     description:
-      "Demands, contracts, briefs — paragraph chunking against the template_chunks table. Edit the column names to match your schema.",
+      "Briefs, contracts, manuals — paragraph chunking against the template_chunks table. Edit the column names to match your schema.",
     table: "template_chunks",
     textColumn: "text",
     embeddingColumn: "embedding",

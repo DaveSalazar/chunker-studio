@@ -1,7 +1,7 @@
 # Contributing
 
 Thanks for taking a look! Chunker Studio is a free desktop tool for
-chunking legal documents — issues, ideas, and PRs are welcome.
+chunking article-based documents — issues, ideas, and PRs are welcome.
 
 This is a maintainer-driven project (one human in spare time), so
 please read this short guide before opening anything substantial.

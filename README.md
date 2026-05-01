@@ -2,8 +2,9 @@
 
 > Preview every chunk before you embed.
 
-Chunker Studio is a free desktop tool for slicing legal documents — laws,
-codes, jurisprudence — into clean, article-aware chunks. Tune the
+Chunker Studio is a free desktop tool for slicing article-based
+documents — codes, regulations, contracts, manuals, anything organized
+by `Art. N` markers — into clean, semantically-aware chunks. Tune the
 sliders, watch the preview update live, and ship to **pgvector** when it
 looks right. Local-first; nothing leaves your machine until you click
 **Index**.
@@ -24,9 +25,9 @@ looks right. Local-first; nothing leaves your machine until you click
 
 ## Why this exists
 
-Most chunkers treat every document like prose. Legal text is **not**
-prose — it's structured by article, layered with running headers and
-footers, and worth zero if a stray page break splits an article in
+Most chunkers treat every document like prose. Article-based text is
+**not** prose — it's structured by article, layered with running headers
+and footers, and worth zero if a stray page break splits an article in
 half. Chunker Studio gives you a real-time preview of how the chunker
 sees your corpus *before* a single token is embedded.
 
