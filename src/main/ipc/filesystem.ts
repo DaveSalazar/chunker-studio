@@ -10,6 +10,7 @@ import type {
   IpcResult,
   OpenedFile,
 } from "../../shared/types";
+import { assertSafePath } from "./pathGuard";
 import { wrap } from "./wrap";
 
 export function registerFilesystemHandlers(): void {
@@ -50,10 +51,11 @@ export function registerFilesystemHandlers(): void {
     "folder:list",
     async (_event, folderPath: string): Promise<IpcResult<FolderEntry[]>> =>
       wrap(async () => {
+        const safe = assertSafePath(folderPath, "folder path");
         const useCase = AppContainer.get<ListFolderUseCase>(
           FileSystemLocator.ListFolderUseCase,
         );
-        return useCase.execute(folderPath);
+        return useCase.execute(safe);
       }),
   );
 
@@ -61,10 +63,11 @@ export function registerFilesystemHandlers(): void {
     "file:read",
     async (_event, filePath: string): Promise<IpcResult<Uint8Array>> =>
       wrap(async () => {
+        const safe = assertSafePath(filePath, "file path");
         const repo = AppContainer.get<FileSystemRepository>(
           FileSystemLocator.FileSystemRepository,
         );
-        return repo.readBytes(filePath);
+        return repo.readBytes(safe);
       }),
   );
 }

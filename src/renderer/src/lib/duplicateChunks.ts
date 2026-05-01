@@ -9,8 +9,22 @@ export interface DuplicateInfo {
 
 const WHITESPACE_RE = /\s+/g;
 
-function normalize(text: string): string {
-  return text.trim().replace(WHITESPACE_RE, " ").toLowerCase();
+/**
+ * Normalized text per chunk is computed once and cached on the chunk
+ * object's identity. Each (re)chunk produces fresh `ChunkRecord`
+ * objects, so the WeakMap auto-clears when the chunker reruns. For a
+ * 2,500-chunk corpus this turns the duplicate-detection rerun cost on
+ * settings change from ~1.2M char ops down to ~2,500 Map lookups.
+ */
+const NORMALIZED_CACHE = new WeakMap<ChunkRecord, string>();
+
+function normalize(chunk: ChunkRecord): string {
+  let cached = NORMALIZED_CACHE.get(chunk);
+  if (cached === undefined) {
+    cached = chunk.text.trim().replace(WHITESPACE_RE, " ").toLowerCase();
+    NORMALIZED_CACHE.set(chunk, cached);
+  }
+  return cached;
 }
 
 /**
@@ -30,7 +44,7 @@ export function findDuplicateGroups(
 
   const buckets = new Map<string, number[]>();
   for (const chunk of chunks) {
-    const norm = normalize(chunk.text);
+    const norm = normalize(chunk);
     if (norm.length < minChars) continue;
     const list = buckets.get(norm);
     if (list) list.push(chunk.index);

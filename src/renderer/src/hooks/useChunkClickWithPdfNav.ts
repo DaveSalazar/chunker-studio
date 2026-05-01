@@ -1,7 +1,7 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { pageForChunk } from "@/lib/pageForChunk";
 import type { ChunkerSession, DocumentEntry } from "@/hooks/useChunkerSession";
-import type { ChunkingResult } from "@shared/types";
+import type { ChunkRecord, ChunkingResult } from "@shared/types";
 
 /**
  * Returns a chunk-click handler that highlights the chunk *and* navigates
@@ -15,11 +15,20 @@ export function useChunkClickWithPdfNav(
   effectiveResult: ChunkingResult | null,
   setPdfPage: ChunkerSession["setPdfPage"],
 ) {
+  // O(1) lookup so the click handler doesn't linear-scan thousands of
+  // chunks. The map is rebuilt only when the underlying chunks change
+  // (re-chunk, dedup toggle, settings change).
+  const chunkByIndex = useMemo(() => {
+    const m = new Map<number, ChunkRecord>();
+    if (effectiveResult) for (const c of effectiveResult.chunks) m.set(c.index, c);
+    return m;
+  }, [effectiveResult]);
+
   return useCallback(
     (index: number | null) => {
       setActiveChunkIndex(index);
       if (index === null || !activeDoc || !effectiveResult) return;
-      const chunk = effectiveResult.chunks.find((c) => c.index === index);
+      const chunk = chunkByIndex.get(index);
       if (!chunk) return;
       const page = pageForChunk(
         chunk,
@@ -28,6 +37,6 @@ export function useChunkClickWithPdfNav(
       );
       if (page !== null) setPdfPage(activeDoc.id, page);
     },
-    [setActiveChunkIndex, activeDoc, effectiveResult, setPdfPage],
+    [setActiveChunkIndex, activeDoc, effectiveResult, chunkByIndex, setPdfPage],
   );
 }

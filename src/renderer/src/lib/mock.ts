@@ -1,4 +1,4 @@
-import type { ChunkPreview } from "@/components/app/ChunkCard";
+import type { ChunkCardChunk } from "@/components/app/ChunkCard";
 import type { ChunkRecord } from "@shared/types";
 
 export const SAMPLE_TEXT = `Art. 1480.- El deudor que se encuentre en mora debe indemnizar al
@@ -19,7 +19,7 @@ Art. 1483.- El cumplimiento se hará en el lugar y tiempo señalados por
 la convención. A falta de pacto, se entenderá que el cumplimiento debe
 realizarse en el domicilio del deudor.`;
 
-export const SAMPLE_CHUNKS: ChunkPreview[] = [
+export const SAMPLE_CHUNKS: ChunkCardChunk[] = [
   {
     index: 1,
     article: "Art. 1480",

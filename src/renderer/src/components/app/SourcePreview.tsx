@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, type MutableRefObject } from "react";
+import { Fragment, memo, useEffect, useMemo, useRef, type MutableRefObject } from "react";
 import { ChunkBoundaryHandle } from "@/components/app/ChunkBoundaryHandle";
 import { cn } from "@/lib/cn";
 import { buildSegments, type ChunkSegment } from "@/lib/chunkSegments";
@@ -20,27 +20,29 @@ export interface SourcePreviewProps {
   className?: string;
 }
 
+const EMPTY_DUPLICATES: ReadonlySet<number> = new Set();
+const NO_CHUNKS: ChunkRecord[] = [];
+
 /**
  * Renders the parsed (normalized) text with chunk-aware highlighting.
  * Chrome-less by design — the parent owns the card/header. When
  * `onChunkBoundaryChange` is provided, drag handles appear between
  * adjacent chunks for manual re-slicing.
+ *
+ * `buildSegments` no longer takes `activeChunkIndex`, so segments are
+ * stable across selection changes — only the chunk whose active state
+ * flipped re-renders, instead of every span on every click.
  */
-const EMPTY_DUPLICATES: ReadonlySet<number> = new Set();
-
 export function SourcePreview({
   text,
-  chunks = [],
+  chunks = NO_CHUNKS,
   activeChunkIndex = null,
   duplicateIndices = EMPTY_DUPLICATES,
   onChunkClick,
   onChunkBoundaryChange,
   className,
 }: SourcePreviewProps) {
-  const segments = useMemo(
-    () => buildSegments(text, chunks, activeChunkIndex),
-    [text, chunks, activeChunkIndex],
-  );
+  const segments = useMemo(() => buildSegments(text, chunks), [text, chunks]);
 
   const activeRef = useRef<HTMLSpanElement | null>(null);
   useEffect(() => {
@@ -61,8 +63,9 @@ export function SourcePreview({
             ) : (
               <ChunkSegmentSpan
                 seg={seg}
-                activeRef={activeRef}
+                active={seg.chunkIndex === activeChunkIndex}
                 duplicate={duplicateIndices.has(seg.chunkIndex)}
+                activeRef={activeRef}
                 onChunkClick={onChunkClick}
               />
             )}
@@ -90,26 +93,31 @@ function Gap({ seg }: { seg: ChunkSegment }) {
   );
 }
 
-function ChunkSegmentSpan({
-  seg,
-  activeRef,
-  duplicate = false,
-  onChunkClick,
-}: {
+interface ChunkSegmentSpanProps {
   seg: ChunkSegment;
+  active: boolean;
+  duplicate: boolean;
   activeRef: MutableRefObject<HTMLSpanElement | null>;
-  duplicate?: boolean;
   onChunkClick?: (index: number) => void;
-}) {
+}
+
+function ChunkSegmentSpanImpl({
+  seg,
+  active,
+  duplicate,
+  activeRef,
+  onChunkClick,
+}: ChunkSegmentSpanProps) {
   const idx = seg.chunkIndex!;
+  const handleClick = onChunkClick ? () => onChunkClick(idx) : undefined;
   return (
     <span
       data-segment-start={seg.baseOffset}
-      ref={seg.active ? activeRef : undefined}
-      onClick={() => onChunkClick?.(idx)}
+      ref={active ? activeRef : undefined}
+      onClick={handleClick}
       className={cn(
         "rounded-[3px] transition-colors duration-150 cursor-pointer",
-        seg.active
+        active
           ? "bg-primary/35 text-foreground ring-1 ring-primary/70 shadow-[0_0_0_3px_hsl(var(--primary)/0.12)]"
           : duplicate
             ? "bg-amber-500/20 text-foreground hover:bg-amber-500/30 ring-1 ring-amber-500/40"
@@ -120,6 +128,14 @@ function ChunkSegmentSpan({
     </span>
   );
 }
+
+/**
+ * Memoized so a selection change only re-renders the two spans whose
+ * `active` flipped (old + new active). Without this, every span in the
+ * source pane reconciles on every chunk click — for a 2,500-chunk doc
+ * that's thousands of span renders per click.
+ */
+const ChunkSegmentSpan = memo(ChunkSegmentSpanImpl);
 
 function Boundary({
   left,

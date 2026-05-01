@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Check, CloudUpload, Copy } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ChunksBody } from "@/components/app/ChunksBody";
@@ -53,11 +53,12 @@ export function ChunksPanel({
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const listRef = useChunkScrollSync({ result, parsed: parsed ?? null, pdfPage, activeChunkIndex });
-
-  const findChunk = useCallback(
-    (idx: number): ChunkRecord | undefined => chunks.find((c) => c.index === idx),
-    [chunks],
-  );
+  // O(1) chunk lookup so Cmd+C / context-menu copy don't scan ~2.5k chunks per click.
+  const chunkByIndex = useMemo(() => {
+    const m = new Map<number, ChunkRecord>();
+    for (const c of chunks) m.set(c.index, c);
+    return m;
+  }, [chunks]);
 
   const showToast = useCallback((message: string) => {
     setToast(message);
@@ -71,7 +72,7 @@ export function ChunksPanel({
 
   const copyChunk = useCallback(
     async (idx: number) => {
-      const chunk = findChunk(idx);
+      const chunk = chunkByIndex.get(idx);
       if (!chunk) return;
       try {
         await navigator.clipboard.writeText(chunk.text);
@@ -80,7 +81,7 @@ export function ChunksPanel({
         console.error("clipboard write failed", err);
       }
     },
-    [findChunk, showToast, t],
+    [chunkByIndex, showToast, t],
   );
 
   useEffect(() => {  // Cmd/Ctrl+C copies active chunk; defers to browser on selection/form focus.
@@ -97,7 +98,7 @@ export function ChunksPanel({
   }, [activeChunkIndex, copyChunk]);
 
   const onChunkContextMenu = useCallback(
-    (idx: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
+    (idx: number, e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
       onChunkClick(idx);
       setMenu({ chunkIndex: idx, position: { x: e.clientX, y: e.clientY } });

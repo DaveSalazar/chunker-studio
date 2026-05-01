@@ -19,8 +19,13 @@ function createWindow(): BrowserWindow {
     backgroundColor: "#0b0c10",
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
-      sandbox: false,
+      // Defence-in-depth: even with contextIsolation, a sandboxed
+      // renderer can't directly call Node APIs if context isolation
+      // were ever bypassed. The preload uses contextBridge only, so
+      // it's already sandbox-compatible.
+      sandbox: true,
       contextIsolation: true,
+      nodeIntegration: false,
     },
   });
 

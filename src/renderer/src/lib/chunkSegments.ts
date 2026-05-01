@@ -7,7 +7,6 @@ export interface ChunkSegment {
   /** When non-null, this segment is the body of `chunks[arrayIndex]`. */
   arrayIndex: number | null;
   chunkIndex: number | null;
-  active: boolean;
 }
 
 /**
@@ -15,15 +14,19 @@ export interface ChunkSegment {
  * "between-chunks" segments. Chunks that overlap (shouldn't happen, but
  * defensive) are clipped against the running cursor so segments are
  * always contiguous and never duplicated.
+ *
+ * Active-chunk highlighting is *not* baked into segments — the caller
+ * computes `isActive = seg.chunkIndex === activeIndex` at render time.
+ * That keeps segments stable across selection changes so memoized child
+ * spans only re-render when their own active state actually flips.
  */
 export function buildSegments(
   text: string,
   chunks: ChunkRecord[],
-  activeIndex: number | null,
 ): ChunkSegment[] {
   if (text.length === 0) return [];
   if (chunks.length === 0) {
-    return [{ text, baseOffset: 0, arrayIndex: null, chunkIndex: null, active: false }];
+    return [{ text, baseOffset: 0, arrayIndex: null, chunkIndex: null }];
   }
 
   // Sort a copy and remember the array index of each entry so boundary
@@ -42,7 +45,6 @@ export function buildSegments(
         baseOffset: cursor,
         arrayIndex: null,
         chunkIndex: null,
-        active: false,
       });
     }
     if (end > start) {
@@ -51,7 +53,6 @@ export function buildSegments(
         baseOffset: start,
         arrayIndex: i,
         chunkIndex: c.index,
-        active: c.index === activeIndex,
       });
       cursor = end;
     }
@@ -62,7 +63,6 @@ export function buildSegments(
       baseOffset: cursor,
       arrayIndex: null,
       chunkIndex: null,
-      active: false,
     });
   }
   return segments;

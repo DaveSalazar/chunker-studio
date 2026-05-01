@@ -1,4 +1,4 @@
-import type { Ref } from "react";
+import { memo, useMemo, type Ref } from "react";
 import { FileBox, FileText } from "lucide-react";
 import {
   List,
@@ -26,7 +26,8 @@ export interface ChunksBodyProps {
   onChunkClick: (index: number) => void;
   onChunkContextMenu: (
     index: number,
-  ) => (event: React.MouseEvent<HTMLButtonElement>) => void;
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => void;
   /**
    * Forwarded to react-window so the parent can call `.scrollToRow(...)`
    * — used by the PDF page → chunks-panel auto-scroll.
@@ -41,10 +42,11 @@ interface RowProps {
   onChunkClick: (index: number) => void;
   onChunkContextMenu: (
     index: number,
-  ) => (event: React.MouseEvent<HTMLButtonElement>) => void;
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => void;
 }
 
-function Row({
+function RowImpl({
   index,
   style,
   chunks,
@@ -59,22 +61,20 @@ function Row({
   return (
     <div style={style} className="pb-2 pr-1">
       <ChunkCard
-        chunk={{
-          index: c.index,
-          article: c.article ?? undefined,
-          heading: c.heading ?? undefined,
-          text: c.text,
-          tokenCount: c.tokenCount,
-          charCount: c.charCount,
-        }}
+        chunk={c}
         active={c.index === activeChunkIndex}
-        duplicate={dup ? { count: dup.count } : undefined}
-        onClick={() => onChunkClick(c.index)}
-        onContextMenu={onChunkContextMenu(c.index)}
+        duplicateCount={dup?.count}
+        onClick={onChunkClick}
+        onContextMenu={onChunkContextMenu}
       />
     </div>
   );
 }
+
+// Cast back to the original signature — `memo()` returns
+// `MemoExoticComponent` whose return type widens to `ReactNode`, which
+// react-window v2's strictly-typed `rowComponent` slot rejects.
+const Row = memo(RowImpl) as typeof RowImpl;
 
 /**
  * Three render branches: unparsed empty state, "0 chunks produced"
@@ -93,6 +93,13 @@ export function ChunksBody({
 }: ChunksBodyProps) {
   const t = useT();
   const chunks = result?.chunks ?? [];
+  // Stable reference unless one of the inputs changes; matters because
+  // react-window passes `rowProps` through to memoized rows. A fresh
+  // object every render would defeat React.memo on `Row`.
+  const rowProps = useMemo<RowProps>(
+    () => ({ chunks, activeChunkIndex, duplicateInfo, onChunkClick, onChunkContextMenu }),
+    [chunks, activeChunkIndex, duplicateInfo, onChunkClick, onChunkContextMenu],
+  );
   if (loading === "unparsed") {
     return (
       <EmptyState
@@ -118,13 +125,7 @@ export function ChunksBody({
       rowComponent={Row}
       rowCount={chunks.length}
       rowHeight={ROW_HEIGHT}
-      rowProps={{
-        chunks,
-        activeChunkIndex,
-        duplicateInfo,
-        onChunkClick,
-        onChunkContextMenu,
-      }}
+      rowProps={rowProps}
       overscanCount={3}
     />
   );

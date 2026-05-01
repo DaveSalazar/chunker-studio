@@ -26,30 +26,31 @@ export function useChunkScrollSync(opts: {
   const activeIdxRef = useRef(activeChunkIndex);
   activeIdxRef.current = activeChunkIndex;
 
-  const { chunkPages, pageToFirstIdx } = useMemo(() => {
-    const cp = new Map<number, number>();
+  // pageToFirstIdx: page → array position of the first chunk that starts on it.
+  // pageByChunkIndex: chunk's `index` → page. Lets the effect check
+  // whether the active chunk is already on `pdfPage` in O(1) without
+  // linear-scanning the chunks array.
+  const { pageToFirstIdx, pageByChunkIndex } = useMemo(() => {
     const pt = new Map<number, number>();
-    if (!result || !parsed) return { chunkPages: cp, pageToFirstIdx: pt };
+    const pbci = new Map<number, number>();
+    if (!result || !parsed) return { pageToFirstIdx: pt, pageByChunkIndex: pbci };
     const len = result.normalizedText.length;
     result.chunks.forEach((c, i) => {
       const p = pageForChunk(c, parsed, len);
       if (p === null) return;
-      cp.set(i, p);
+      pbci.set(c.index, p);
       if (!pt.has(p)) pt.set(p, i);
     });
-    return { chunkPages: cp, pageToFirstIdx: pt };
+    return { pageToFirstIdx: pt, pageByChunkIndex: pbci };
   }, [result, parsed]);
 
   useEffect(() => {
     if (pdfPage === undefined) return;
     if (lastScrolledPageRef.current === pdfPage) return;
     const aIdx = activeIdxRef.current;
-    if (aIdx !== null && result) {
-      const arrayIdx = result.chunks.findIndex((c) => c.index === aIdx);
-      if (arrayIdx >= 0 && chunkPages.get(arrayIdx) === pdfPage) {
-        lastScrolledPageRef.current = pdfPage;
-        return;
-      }
+    if (aIdx !== null && pageByChunkIndex.get(aIdx) === pdfPage) {
+      lastScrolledPageRef.current = pdfPage;
+      return;
     }
     const target = pageToFirstIdx.get(pdfPage);
     if (target !== undefined) {
@@ -60,7 +61,7 @@ export function useChunkScrollSync(opts: {
       });
       lastScrolledPageRef.current = pdfPage;
     }
-  }, [pdfPage, pageToFirstIdx, chunkPages, result]);
+  }, [pdfPage, pageToFirstIdx, pageByChunkIndex]);
 
   return listRef;
 }

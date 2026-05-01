@@ -7,6 +7,7 @@ import type { FileSystemRepository } from "../core/filesystem/domain/FileSystemR
 import type { SessionRepository } from "../core/session/domain/SessionRepository";
 import { hashBytes } from "../core/session/domain/hash";
 import type { IpcResult, ParsedDocument } from "../../shared/types";
+import { assertSafePath } from "./pathGuard";
 import { wrap } from "./wrap";
 
 let pool: ParserWorkerPool | null = null;
@@ -28,16 +29,17 @@ export function registerParsingHandlers(): void {
     "document:parse",
     async (_event, filePath: string): Promise<IpcResult<ParsedDocument>> =>
       wrap(async () => {
-        console.log("[parsing] document:parse start", filePath);
+        const safePath = assertSafePath(filePath, "file path");
+        console.log("[parsing] document:parse start", safePath);
         const stat = AppContainer.get<StatFileUseCase>(FileSystemLocator.StatFileUseCase);
         const fs = AppContainer.get<FileSystemRepository>(
           FileSystemLocator.FileSystemRepository,
         );
         const sessions = AppContainer.get<SessionRepository>(SessionLocator.SessionRepository);
-        const metadata = await stat.execute(filePath);
+        const metadata = await stat.execute(safePath);
         const kind = pickKind(metadata.extension);
         console.log("[parsing] reading bytes, kind=", kind);
-        const bytes = await fs.readBytes(filePath);
+        const bytes = await fs.readBytes(safePath);
         const fileHash = hashBytes(bytes);
 
         const cached = await sessions.getCachedParse(fileHash);

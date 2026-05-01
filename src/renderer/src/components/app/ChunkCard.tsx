@@ -1,43 +1,63 @@
+import { memo, useCallback } from "react";
 import { Copy, Hash, Quote } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/cn";
 
-export interface ChunkPreview {
+/**
+ * Structural subset of a chunk that ChunkCard renders. Compatible with
+ * `ChunkRecord` from `@shared/types` *and* with the lightweight fixture
+ * objects in stories — neither needs to be massaged before passing in.
+ */
+export interface ChunkCardChunk {
   index: number;
-  article?: string;
-  heading?: string;
+  article?: string | null;
+  heading?: string | null;
   text: string;
   tokenCount?: number;
   charCount?: number;
 }
 
 export interface ChunkCardProps {
-  chunk: ChunkPreview;
+  chunk: ChunkCardChunk;
   active?: boolean;
-  /** Duplicate-group info from `findDuplicateGroups`. Undefined → not a duplicate. */
-  duplicate?: { count: number };
-  onClick?: () => void;
-  onContextMenu?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  /** Number of chunks in the duplicate group (if any). Plain number so
+   *  React.memo's shallow-compare doesn't break on a fresh object literal. */
+  duplicateCount?: number;
+  /** Receives the chunk's own index — keeps the row-level closure stable. */
+  onClick?: (index: number) => void;
+  onContextMenu?: (
+    index: number,
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => void;
 }
 
-export function ChunkCard({
+function ChunkCardImpl({
   chunk,
   active,
-  duplicate,
+  duplicateCount,
   onClick,
   onContextMenu,
 }: ChunkCardProps) {
+  const handleClick = useCallback(
+    () => onClick?.(chunk.index),
+    [onClick, chunk.index],
+  );
+  const handleContext = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => onContextMenu?.(chunk.index, e),
+    [onContextMenu, chunk.index],
+  );
+  const isDuplicate = duplicateCount !== undefined && duplicateCount > 1;
   return (
     <button
       type="button"
       data-chunk-index={chunk.index}
       data-context-trigger={onContextMenu ? "true" : undefined}
-      onClick={onClick}
-      onContextMenu={onContextMenu}
+      onClick={onClick ? handleClick : undefined}
+      onContextMenu={onContextMenu ? handleContext : undefined}
       className={cn(
         "group flex w-full flex-col gap-3 rounded-xl border border-border bg-card/60 p-4 text-left transition-all hover:border-primary/40 hover:bg-card",
         active && "border-primary/60 bg-primary/5 shadow-[0_0_0_4px_hsl(var(--primary)/0.08)]",
-        duplicate && !active && "border-amber-500/50 bg-amber-500/5 hover:border-amber-500/70",
+        isDuplicate && !active && "border-amber-500/50 bg-amber-500/5 hover:border-amber-500/70",
       )}
     >
       <div className="flex items-center gap-2">
@@ -50,14 +70,14 @@ export function ChunkCard({
             {chunk.article}
           </Badge>
         )}
-        {duplicate && (
+        {isDuplicate && (
           <Badge
             variant="muted"
             className="gap-1 border-amber-500/40 bg-amber-500/15 text-amber-300"
-            title={`${duplicate.count} chunks share this exact text`}
+            title={`${duplicateCount} chunks share this exact text`}
           >
             <Copy className="h-3 w-3" />
-            ×{duplicate.count}
+            ×{duplicateCount}
           </Badge>
         )}
         {chunk.heading && (
@@ -84,3 +104,11 @@ export function ChunkCard({
     </button>
   );
 }
+
+/**
+ * Memoized so a parent re-render (toast, panel resize, menu state…)
+ * doesn't force every visible card to reconcile. Default shallow compare
+ * works because callbacks are stable from upstream and primitive props
+ * (`active`, `duplicateCount`) only change when they actually flip.
+ */
+export const ChunkCard = memo(ChunkCardImpl);
