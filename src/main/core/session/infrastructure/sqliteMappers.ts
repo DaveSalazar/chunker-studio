@@ -5,6 +5,7 @@ import type {
 } from "../../../../shared/types";
 import type { CachedChunking } from "../domain/SessionRepository";
 import type { ChunkRow, ParsedRow, RunRow } from "./sqliteStatements";
+import type { ChunkBaseParams } from "./sqliteParams";
 import { safeParseSettings, safeParseStringArray } from "./sqliteSerialization";
 
 /** Build a ParsedDocument view-model from a parsed_documents row. */
@@ -66,13 +67,15 @@ export function runRowToDomain(run: RunRow, chunkRows: ChunkRow[]): CachedChunki
   };
 }
 
-/** Bind params for a single chunk row insert/update. */
+/** Bind params for a single chunk row insert/update. The return type
+ *  flows into `insertChunk` (after spreading `manuallyEdited`) and
+ *  `updateChunk`, so a missed field becomes a compile error there. */
 export function chunkParams(
   textHash: string,
   settingsHash: string,
   chunkIndex: number,
   chunk: ChunkRecord,
-): Record<string, unknown> {
+): ChunkBaseParams {
   return {
     textHash,
     settingsHash,

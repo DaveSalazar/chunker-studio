@@ -1,4 +1,13 @@
 import type { Database as DatabaseInstance, Statement } from "better-sqlite3";
+import type {
+  GetParseParams,
+  InsertChunkParams,
+  RunKey,
+  SaveParseParams,
+  SaveRunParams,
+  TouchRunParams,
+  UpdateChunkParams,
+} from "./sqliteParams";
 
 export type AnyStatement = Statement<unknown[], unknown>;
 
@@ -34,16 +43,22 @@ export interface ChunkRow {
   manually_edited: number;
 }
 
+/**
+ * Each statement's bind tuple is typed via the second generic. The
+ * call site then *must* pass an object that matches the param shape —
+ * forgetting a key is a compile error, no longer a "Too few parameter
+ * values" runtime surprise.
+ */
 export interface SessionStatements {
-  getParse: AnyStatement;
-  saveParse: AnyStatement;
-  getRun: AnyStatement;
-  getChunks: AnyStatement;
-  saveRun: AnyStatement;
-  deleteChunks: AnyStatement;
-  insertChunk: AnyStatement;
-  updateChunk: AnyStatement;
-  touchRun: AnyStatement;
+  getParse: Statement<[GetParseParams], unknown>;
+  saveParse: Statement<[SaveParseParams], unknown>;
+  getRun: Statement<[RunKey], unknown>;
+  getChunks: Statement<[RunKey], unknown>;
+  saveRun: Statement<[SaveRunParams], unknown>;
+  deleteChunks: Statement<[RunKey], unknown>;
+  insertChunk: Statement<[InsertChunkParams], unknown>;
+  updateChunk: Statement<[UpdateChunkParams], unknown>;
+  touchRun: Statement<[TouchRunParams], unknown>;
 }
 
 export function prepareStatements(db: DatabaseInstance): SessionStatements {
@@ -51,13 +66,14 @@ export function prepareStatements(db: DatabaseInstance): SessionStatements {
     getParse: db.prepare(
       `SELECT text, page_count, page_offsets_json, warnings_json,
               path, name, extension, unsupported_reason
-       FROM parsed_documents WHERE file_hash = ?`,
-    ),
+       FROM parsed_documents WHERE file_hash = @fileHash`,
+    ) as Statement<[GetParseParams], unknown>,
     saveParse: db.prepare(
       `INSERT INTO parsed_documents
          (file_hash, path, name, extension, text, page_count, page_offsets_json,
           warnings_json, unsupported_reason, accessed_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       VALUES (@fileHash, @path, @name, @extension, @text, @pageCount,
+               @pageOffsetsJson, @warningsJson, @unsupportedReason, @accessedAt)
        ON CONFLICT(file_hash) DO UPDATE SET
          path = excluded.path,
          name = excluded.name,
@@ -68,20 +84,20 @@ export function prepareStatements(db: DatabaseInstance): SessionStatements {
          warnings_json = excluded.warnings_json,
          unsupported_reason = excluded.unsupported_reason,
          accessed_at = excluded.accessed_at`,
-    ),
+    ) as Statement<[SaveParseParams], unknown>,
     getRun: db.prepare(
       `SELECT settings_json, total_tokens, total_chars, strategy, normalized_text,
               estimated_cost_usd
        FROM chunking_runs
-       WHERE text_hash = ? AND settings_hash = ?`,
-    ),
+       WHERE text_hash = @textHash AND settings_hash = @settingsHash`,
+    ) as Statement<[RunKey], unknown>,
     getChunks: db.prepare(
       `SELECT chunk_index, article, heading, text, char_count, token_count,
               start_offset, end_offset, manually_edited
        FROM chunks
-       WHERE text_hash = ? AND settings_hash = ?
+       WHERE text_hash = @textHash AND settings_hash = @settingsHash
        ORDER BY chunk_index ASC`,
-    ),
+    ) as Statement<[RunKey], unknown>,
     saveRun: db.prepare(
       `INSERT INTO chunking_runs
          (text_hash, settings_hash, settings_json, total_tokens, total_chars,
@@ -96,10 +112,12 @@ export function prepareStatements(db: DatabaseInstance): SessionStatements {
          normalized_text = excluded.normalized_text,
          estimated_cost_usd = excluded.estimated_cost_usd,
          accessed_at = excluded.accessed_at`,
-    ),
+    ) as Statement<[SaveRunParams], unknown>,
     deleteChunks: db.prepare(
-      `DELETE FROM chunks WHERE text_hash = ? AND settings_hash = ? AND manually_edited = 0`,
-    ),
+      `DELETE FROM chunks
+       WHERE text_hash = @textHash AND settings_hash = @settingsHash
+         AND manually_edited = 0`,
+    ) as Statement<[RunKey], unknown>,
     insertChunk: db.prepare(
       `INSERT INTO chunks
          (text_hash, settings_hash, chunk_index, article, heading, text,
@@ -116,7 +134,7 @@ export function prepareStatements(db: DatabaseInstance): SessionStatements {
          end_offset = excluded.end_offset,
          manually_edited = excluded.manually_edited
        WHERE manually_edited = 0`,
-    ),
+    ) as Statement<[InsertChunkParams], unknown>,
     updateChunk: db.prepare(
       `INSERT INTO chunks
          (text_hash, settings_hash, chunk_index, article, heading, text,
@@ -132,9 +150,11 @@ export function prepareStatements(db: DatabaseInstance): SessionStatements {
          start_offset = excluded.start_offset,
          end_offset = excluded.end_offset,
          manually_edited = 1`,
-    ),
+    ) as Statement<[UpdateChunkParams], unknown>,
     touchRun: db.prepare(
-      `UPDATE chunking_runs SET accessed_at = ? WHERE text_hash = ? AND settings_hash = ?`,
-    ),
+      `UPDATE chunking_runs
+         SET accessed_at = @accessedAt
+       WHERE text_hash = @textHash AND settings_hash = @settingsHash`,
+    ) as Statement<[TouchRunParams], unknown>,
   };
 }

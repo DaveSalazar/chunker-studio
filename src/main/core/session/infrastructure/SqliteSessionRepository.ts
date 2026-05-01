@@ -24,6 +24,8 @@ import {
 } from "./sqliteStatements";
 import { chunkParams, parsedRowToDomain, runRowToDomain } from "./sqliteMappers";
 
+const now = (): number => Date.now();
+
 const FILENAME = "session.db";
 
 /**
@@ -51,23 +53,29 @@ export class SqliteSessionRepository implements SessionRepository {
 
   async getCachedParse(fileHash: string): Promise<CachedParse | null> {
     const stmts = this.ensureOpen();
-    const row = stmts.getParse.get(fileHash) as ParsedRow | undefined;
+    const row = stmts.getParse.get({ fileHash }) as ParsedRow | undefined;
     return row ? { parsed: parsedRowToDomain(row) } : null;
   }
 
   async saveCachedParse(fileHash: string, parsed: ParsedDocument): Promise<void> {
     const stmts = this.ensureOpen();
-    stmts.saveParse.run(
+    // Bind by name — TypeScript verifies every key against
+    // `SaveParseParams` so a future schema change can't silently drop
+    // a column the way the v3 migration originally did.
+    stmts.saveParse.run({
       fileHash,
-      parsed.path,
-      parsed.name,
-      parsed.extension,
-      parsed.text,
-      parsed.pageCount ?? null,
-      JSON.stringify(parsed.warnings ?? []),
-      parsed.unsupportedReason ?? null,
-      Date.now(),
-    );
+      path: parsed.path,
+      name: parsed.name,
+      extension: parsed.extension,
+      text: parsed.text,
+      pageCount: parsed.pageCount ?? null,
+      pageOffsetsJson: parsed.pageOffsets
+        ? JSON.stringify(parsed.pageOffsets)
+        : null,
+      warningsJson: JSON.stringify(parsed.warnings ?? []),
+      unsupportedReason: parsed.unsupportedReason ?? null,
+      accessedAt: now(),
+    });
   }
 
   async getCachedChunking(
@@ -75,11 +83,12 @@ export class SqliteSessionRepository implements SessionRepository {
     settingsHash: string,
   ): Promise<CachedChunking | null> {
     const stmts = this.ensureOpen();
-    const run = stmts.getRun.get(textHash, settingsHash) as RunRow | undefined;
+    const key = { textHash, settingsHash };
+    const run = stmts.getRun.get(key) as RunRow | undefined;
     if (!run) return null;
-    const chunkRows = stmts.getChunks.all(textHash, settingsHash) as ChunkRow[];
+    const chunkRows = stmts.getChunks.all(key) as ChunkRow[];
     if (chunkRows.length === 0) return null;
-    stmts.touchRun.run(Date.now(), textHash, settingsHash);
+    stmts.touchRun.run({ ...key, accessedAt: now() });
     return runRowToDomain(run, chunkRows);
   }
 
@@ -91,21 +100,21 @@ export class SqliteSessionRepository implements SessionRepository {
   ): Promise<void> {
     const stmts = this.ensureOpen();
     const db = this.db!;
+    const key = { textHash, settingsHash };
     const tx = db.transaction(() => {
       stmts.saveRun.run({
-        textHash,
-        settingsHash,
+        ...key,
         settingsJson: JSON.stringify(settings),
         totalTokens: result.totalTokens,
         totalChars: result.totalChars,
         strategy: result.strategy,
         normalizedText: result.normalizedText,
         estimatedCostUsd: result.estimatedCostUsd,
-        accessedAt: Date.now(),
+        accessedAt: now(),
       });
       // Drop auto-generated chunks; keep manual edits intact so a re-run
       // with the same settings preserves user-edited boundaries.
-      stmts.deleteChunks.run(textHash, settingsHash);
+      stmts.deleteChunks.run(key);
       for (const chunk of result.chunks) {
         stmts.insertChunk.run({
           ...chunkParams(textHash, settingsHash, chunk.index, chunk),
@@ -126,7 +135,7 @@ export class SqliteSessionRepository implements SessionRepository {
     const stmts = this.ensureOpen();
     const db = this.db!;
     const tx = db.transaction(() => {
-      stmts.touchRun.run(Date.now(), textHash, settingsHash);
+      stmts.touchRun.run({ textHash, settingsHash, accessedAt: now() });
       stmts.updateChunk.run(chunkParams(textHash, settingsHash, leftIndex, leftChunk));
       stmts.updateChunk.run(chunkParams(textHash, settingsHash, leftIndex + 1, rightChunk));
     });
