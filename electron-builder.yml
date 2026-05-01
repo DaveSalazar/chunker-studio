@@ -37,9 +37,12 @@ nsis:
   uninstallDisplayName: Chunker Studio
   oneClick: false
   allowToChangeInstallationDirectory: true
-  installerIcon: resources/logo.png
-  uninstallerIcon: resources/logo.png
-  installerHeaderIcon: resources/logo.png
+  # NSIS demands real .ico files for installerIcon / uninstallerIcon /
+  # installerHeaderIcon — PNG fails the MUI_INTERFACE macro. Omitting
+  # them lets electron-builder fall back to the .ico it auto-generates
+  # from `win.icon` (resources/logo.png). To customize the wizard
+  # artwork, drop a multi-resolution .ico into resources/ and point
+  # these keys at it.
 linux:
   target:
     - AppImage
