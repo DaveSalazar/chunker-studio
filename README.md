@@ -4,6 +4,14 @@
 
 <p align="center"><em>Preview every chunk before you embed.</em></p>
 
+<p align="center">
+  <a href="https://davesalazar.github.io/chunker-studio-website/"><strong>📚 Documentation</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/DaveSalazar/chunker-studio/releases">Download</a>
+  &nbsp;·&nbsp;
+  <a href="https://ko-fi.com/davesalazar">Buy me a coffee</a>
+</p>
+
 Chunker Studio is a free desktop tool for slicing article-based
 documents — codes, regulations, contracts, manuals, anything organized
 by `Art. N` markers — into clean, semantically-aware chunks. Tune the
@@ -11,13 +19,14 @@ sliders, watch the preview update live, and ship to **pgvector** when it
 looks right. Local-first; nothing leaves your machine until you click
 **Index**.
 
+[![Documentation](https://img.shields.io/badge/docs-Chunker%20Studio-blue)](https://davesalazar.github.io/chunker-studio-website/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-blue)
-![Status](https://img.shields.io/badge/status-freeware-brightgreen)
+![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-blue)
+![Status](https://img.shields.io/badge/status-open%20source-brightgreen)
 
 > **Like it?** Chunker Studio is free forever. If it saved you time,
 > consider [buying me a coffee on Ko-fi](https://ko-fi.com/davesalazar) —
-> it keeps me motivated to ship more freeware tools.
+> it keeps me motivated to ship more open-source tools.
 
 ---
 
