@@ -24,7 +24,7 @@ process.on("unhandledRejection", (reason) => {
 
 interface ParseRequest {
   id: number;
-  kind: "pdf" | "docx" | "text";
+  kind: "pdf" | "docx" | "text" | "docx-html";
   bytes: Uint8Array;
 }
 
@@ -44,6 +44,13 @@ interface ParseSuccess {
     pageOffsets?: number[];
     warnings: string[];
     unsupportedReason?: UnsupportedParseReason;
+    /**
+     * HTML rendering of a .docx for the original-file viewer pane.
+     * Populated only by the "docx-html" request kind; absent for the
+     * normal text-extraction path so its caller never accidentally
+     * embeds it. Already sanitized by the renderer before innerHTML.
+     */
+    html?: string;
   };
 }
 
@@ -128,6 +135,24 @@ async function parseDocx(bytes: Uint8Array): Promise<ParseSuccess["value"]> {
   return { text: result.value, warnings };
 }
 
+async function renderDocxHtml(bytes: Uint8Array): Promise<ParseSuccess["value"]> {
+  // mammoth's HTML writer emits a constrained tag set (h1-h6, p, ul/ol/li,
+  // table, em/strong, a, img-as-data-URI). The renderer side runs the
+  // result through sanitizeDocxHtml before innerHTML; we don't sanitize
+  // here so the worker stays free of any DOM dep.
+  const mammothMod = await import("mammoth");
+  const mammoth = mammothMod.default ?? mammothMod;
+  const result = await mammoth.convertToHtml({
+    buffer: Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength),
+  });
+  const warnings = result.messages
+    .filter((m) => m.type === "warning" || m.type === "error")
+    .map((m) => `${m.type}: ${m.message}`);
+  // text stays empty — this kind only feeds the preview pane, never the
+  // chunker. Callers that need text use the "docx" kind instead.
+  return { text: "", warnings, html: result.value };
+}
+
 function parseText(bytes: Uint8Array): ParseSuccess["value"] {
   const text = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
   return { text, warnings: [] };
@@ -143,6 +168,7 @@ parentPort.on("message", async (req: ParseRequest) => {
     let value: ParseSuccess["value"];
     if (req.kind === "pdf") value = await parsePdf(req.bytes);
     else if (req.kind === "docx") value = await parseDocx(req.bytes);
+    else if (req.kind === "docx-html") value = await renderDocxHtml(req.bytes);
     else value = parseText(req.bytes);
     console.log("[parser-worker] parsed id=", req.id, "text length=", value.text.length);
     const reply: ParseSuccess = { id: req.id, ok: true, value };

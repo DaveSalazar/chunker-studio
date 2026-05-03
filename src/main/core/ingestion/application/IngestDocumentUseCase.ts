@@ -84,6 +84,7 @@ export class IngestDocumentUseCase {
           article: chunk.article,
           heading: chunk.heading,
           text: chunk.text,
+          body: chunk.body,
           embedding: result.vectors[idx],
         });
       });

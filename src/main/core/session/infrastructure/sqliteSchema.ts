@@ -1,6 +1,6 @@
 import type { Database as DatabaseInstance } from "better-sqlite3";
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 const CREATE_SQL = `
   CREATE TABLE IF NOT EXISTS schema_meta (
@@ -38,6 +38,7 @@ const CREATE_SQL = `
     article TEXT,
     heading TEXT,
     text TEXT NOT NULL,
+    body TEXT,
     char_count INTEGER NOT NULL,
     token_count INTEGER NOT NULL,
     start_offset INTEGER NOT NULL,
@@ -76,6 +77,17 @@ export function migrate(db: DatabaseInstance): void {
       db.exec("ALTER TABLE parsed_documents ADD COLUMN page_offsets_json TEXT");
     }
     db.prepare("UPDATE schema_meta SET value = ? WHERE key = 'version'").run(3);
+  }
+  if (current < 4) {
+    // v3 → v4: add `body` for the wholeDocument chunking strategy. Pre-v4
+    // cached chunks come back with body=null, which is correct — the
+    // article-aware strategy never set it. Templates re-parsed under
+    // v4+ populate it; the IngestDialog uses it to round-trip the
+    // verbatim source text into the body column of template_chunks.
+    if (!columnExists(db, "chunks", "body")) {
+      db.exec("ALTER TABLE chunks ADD COLUMN body TEXT");
+    }
+    db.prepare("UPDATE schema_meta SET value = ? WHERE key = 'version'").run(4);
   }
 }
 

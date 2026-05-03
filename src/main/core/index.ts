@@ -26,10 +26,14 @@ import { ParseDocumentUseCase } from "./parsing/application/ParseDocumentUseCase
 // Chunking
 import { ChunkingLocator } from "./chunking/domain/ChunkingLocator";
 import type { TextNormalizer } from "./chunking/domain/TextNormalizer";
+import type { PlaceholderNormalizer } from "./chunking/domain/PlaceholderNormalizer";
 import type { Chunker } from "./chunking/domain/Chunker";
 import type { TokenCounter } from "./chunking/domain/TokenCounter";
 import { DefaultTextNormalizer } from "./chunking/infrastructure/DefaultTextNormalizer";
+import { DefaultPlaceholderNormalizer } from "./chunking/infrastructure/DefaultPlaceholderNormalizer";
 import { ArticleAwareChunker } from "./chunking/infrastructure/ArticleAwareChunker";
+import { WholeDocumentChunker } from "./chunking/infrastructure/WholeDocumentChunker";
+import { CompositeChunker } from "./chunking/infrastructure/CompositeChunker";
 import { TiktokenCounter } from "./chunking/infrastructure/TiktokenCounter";
 import { ChunkDocumentUseCase } from "./chunking/application/ChunkDocumentUseCase";
 
@@ -89,8 +93,19 @@ AppContainer.bind<ParseDocumentUseCase>(ParsingLocator.ParseDocumentUseCase).to(
 AppContainer.bind<TextNormalizer>(ChunkingLocator.TextNormalizer)
   .to(DefaultTextNormalizer)
   .inSingletonScope();
+AppContainer.bind<PlaceholderNormalizer>(ChunkingLocator.PlaceholderNormalizer)
+  .to(DefaultPlaceholderNormalizer)
+  .inSingletonScope();
 AppContainer.bind<TokenCounter>(ChunkingLocator.TokenCounter).to(TiktokenCounter).inSingletonScope();
-AppContainer.bind<Chunker>(ChunkingLocator.Chunker).to(ArticleAwareChunker).inSingletonScope();
+// Component chunkers feed the dispatcher; the public Chunker token
+// resolves to CompositeChunker so callers stay strategy-agnostic.
+AppContainer.bind<Chunker>(ChunkingLocator.ArticleAwareChunker)
+  .to(ArticleAwareChunker)
+  .inSingletonScope();
+AppContainer.bind<Chunker>(ChunkingLocator.WholeDocumentChunker)
+  .to(WholeDocumentChunker)
+  .inSingletonScope();
+AppContainer.bind<Chunker>(ChunkingLocator.Chunker).to(CompositeChunker).inSingletonScope();
 AppContainer.bind<ChunkDocumentUseCase>(ChunkingLocator.ChunkDocumentUseCase).to(ChunkDocumentUseCase);
 
 // Config

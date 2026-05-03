@@ -45,11 +45,13 @@ export const NoSelection: Story = {
         loading="idle"
         error={null}
         parsedPaths={new Set()}
+        indexableCount={0}
         onSelectFolder={() => {}}
         onCloseFolder={() => {}}
         onRefresh={() => {}}
         onLoadEntry={() => {}}
         onParseAll={() => {}}
+        onIndexAll={() => {}}
       />
     </div>
   ),
@@ -75,6 +77,8 @@ export const Listed: Story = {
           onParseAll={() =>
             setLoaded(new Set(ENTRIES.map((e) => e.path)))
           }
+          indexableCount={3}
+          onIndexAll={() => {}}
         />
       </div>
     );
@@ -90,11 +94,13 @@ export const Listing: Story = {
         loading="listing"
         error={null}
         parsedPaths={new Set()}
+        indexableCount={0}
         onSelectFolder={() => {}}
         onCloseFolder={() => {}}
         onRefresh={() => {}}
         onLoadEntry={() => {}}
         onParseAll={() => {}}
+        onIndexAll={() => {}}
       />
     </div>
   ),
@@ -116,6 +122,8 @@ export const Collapsed: Story = {
           onRefresh={() => {}}
           onLoadEntry={() => {}}
           onParseAll={() => {}}
+          indexableCount={0}
+          onIndexAll={() => {}}
           collapsed={collapsed}
           onToggleCollapsed={() => setCollapsed((v) => !v)}
         />

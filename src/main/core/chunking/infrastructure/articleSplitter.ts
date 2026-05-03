@@ -80,6 +80,9 @@ export function splitByArticles(
     } else {
       chunks.push({
         text: body,
+        // body field is for the wholeDocument strategy only — article
+        // chunks already carry their text in `text`, so leave it null.
+        body: null,
         article,
         heading: currentHeading,
         startOffset: start,
@@ -117,6 +120,7 @@ function subdivideLong(
     const text = buffer.join("\n");
     out.push({
       text,
+      body: null,
       article,
       heading,
       startOffset: baseOffset + chunkStartInBody,

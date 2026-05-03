@@ -6,7 +6,11 @@ import { UnsupportedFormatError } from "../core/parsing/domain/ParsingEntities";
 import type { FileSystemRepository } from "../core/filesystem/domain/FileSystemRepository";
 import type { SessionRepository } from "../core/session/domain/SessionRepository";
 import { hashBytes } from "../core/session/domain/hash";
-import type { IpcResult, ParsedDocument } from "../../shared/types";
+import type {
+  DocxHtmlPreview,
+  IpcResult,
+  ParsedDocument,
+} from "../../shared/types";
 import { assertSafePath } from "./pathGuard";
 import { wrap } from "./wrap";
 
@@ -19,7 +23,7 @@ function getPool(): ParserWorkerPool {
 function pickKind(extension: string): ParseKind {
   const ext = extension.toLowerCase();
   if (ext === "pdf") return "pdf";
-  if (ext === "docx" || ext === "doc") return "docx";
+  if (ext === "docx") return "docx";
   if (ext === "txt" || ext === "md") return "text";
   throw new UnsupportedFormatError(extension);
 }
@@ -81,6 +85,35 @@ export function registerParsingHandlers(): void {
         };
         await sessions.saveCachedParse(fileHash, parsed);
         return parsed;
+      }),
+  );
+
+  // Renders a .docx as HTML for the original-file preview pane. Not
+  // cached: the renderer always shows the freshest HTML and the call
+  // is cheap (mammoth's HTML pass is comparable to the text pass it
+  // already runs for chunking). Returns html + warnings; the renderer
+  // sanitizes html before innerHTML.
+  ipcMain.handle(
+    "document:renderDocxHtml",
+    async (_event, filePath: string): Promise<IpcResult<DocxHtmlPreview>> =>
+      wrap(async () => {
+        const safePath = assertSafePath(filePath, "file path");
+        const stat = AppContainer.get<StatFileUseCase>(
+          FileSystemLocator.StatFileUseCase,
+        );
+        const fs = AppContainer.get<FileSystemRepository>(
+          FileSystemLocator.FileSystemRepository,
+        );
+        const metadata = await stat.execute(safePath);
+        if (metadata.extension.toLowerCase() !== "docx") {
+          throw new UnsupportedFormatError(metadata.extension);
+        }
+        const bytes = await fs.readBytes(safePath);
+        const value = await getPool().parse("docx-html", bytes);
+        return {
+          html: value.html ?? "",
+          warnings: value.warnings,
+        };
       }),
   );
 }

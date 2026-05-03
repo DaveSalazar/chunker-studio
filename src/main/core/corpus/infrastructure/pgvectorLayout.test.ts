@@ -30,6 +30,7 @@ const chunk = (overrides: Partial<ChunkPayload> = {}): ChunkPayload => ({
   article: null,
   heading: null,
   text: "body",
+  body: null,
   embedding: [0.1, 0.2, 0.3],
   ...overrides,
 });

@@ -1,5 +1,10 @@
 import { useMemo } from "react";
-import type { ChunkerSession, ChunkerSessionState, DocumentEntry } from "./types";
+import type {
+  ChunkerSession,
+  ChunkerSessionState,
+  DocumentEntry,
+  IndexableDocument,
+} from "./types";
 import { effectiveSettingsFor } from "./helpers";
 
 type Totals = ChunkerSession["totals"];
@@ -10,6 +15,7 @@ export interface DerivedSession {
   totals: Totals;
   loadedPaths: ReadonlySet<string>;
   parsedPaths: ReadonlySet<string>;
+  indexableDocuments: IndexableDocument[];
 }
 
 /** Per-render memoized projections used by the workspace + folder UI. */
@@ -52,5 +58,29 @@ export function useDerived(state: ChunkerSessionState): DerivedSession {
     [state.documents],
   );
 
-  return { active, effectiveSettings, totals, loadedPaths, parsedPaths };
+  // Indexable = parsed + chunked + at least one chunk produced.
+  // Scanned PDFs land in "ready" with `result === null` because the
+  // chunking pipeline is skipped, so the result-and-length check
+  // already excludes them — no extra unsupportedReason guard needed.
+  const indexableDocuments = useMemo<IndexableDocument[]>(
+    () =>
+      state.documents
+        .filter((d) => d.loading === "ready" && d.result && d.result.chunks.length > 0)
+        .map((d) => ({
+          id: d.id,
+          fileName: d.file.name,
+          chunks: d.result!.chunks,
+          totalTokens: d.result!.totalTokens,
+        })),
+    [state.documents],
+  );
+
+  return {
+    active,
+    effectiveSettings,
+    totals,
+    loadedPaths,
+    parsedPaths,
+    indexableDocuments,
+  };
 }

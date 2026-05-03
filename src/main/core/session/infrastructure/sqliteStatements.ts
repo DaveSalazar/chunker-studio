@@ -36,6 +36,7 @@ export interface ChunkRow {
   article: string | null;
   heading: string | null;
   text: string;
+  body: string | null;
   char_count: number;
   token_count: number;
   start_offset: number;
@@ -92,7 +93,7 @@ export function prepareStatements(db: DatabaseInstance): SessionStatements {
        WHERE text_hash = @textHash AND settings_hash = @settingsHash`,
     ) as Statement<[RunKey], unknown>,
     getChunks: db.prepare(
-      `SELECT chunk_index, article, heading, text, char_count, token_count,
+      `SELECT chunk_index, article, heading, text, body, char_count, token_count,
               start_offset, end_offset, manually_edited
        FROM chunks
        WHERE text_hash = @textHash AND settings_hash = @settingsHash
@@ -120,14 +121,15 @@ export function prepareStatements(db: DatabaseInstance): SessionStatements {
     ) as Statement<[RunKey], unknown>,
     insertChunk: db.prepare(
       `INSERT INTO chunks
-         (text_hash, settings_hash, chunk_index, article, heading, text,
+         (text_hash, settings_hash, chunk_index, article, heading, text, body,
           char_count, token_count, start_offset, end_offset, manually_edited)
-       VALUES (@textHash, @settingsHash, @chunkIndex, @article, @heading, @text,
+       VALUES (@textHash, @settingsHash, @chunkIndex, @article, @heading, @text, @body,
                @charCount, @tokenCount, @startOffset, @endOffset, @manuallyEdited)
        ON CONFLICT(text_hash, settings_hash, chunk_index) DO UPDATE SET
          article = excluded.article,
          heading = excluded.heading,
          text = excluded.text,
+         body = excluded.body,
          char_count = excluded.char_count,
          token_count = excluded.token_count,
          start_offset = excluded.start_offset,
@@ -137,14 +139,15 @@ export function prepareStatements(db: DatabaseInstance): SessionStatements {
     ) as Statement<[InsertChunkParams], unknown>,
     updateChunk: db.prepare(
       `INSERT INTO chunks
-         (text_hash, settings_hash, chunk_index, article, heading, text,
+         (text_hash, settings_hash, chunk_index, article, heading, text, body,
           char_count, token_count, start_offset, end_offset, manually_edited)
-       VALUES (@textHash, @settingsHash, @chunkIndex, @article, @heading, @text,
+       VALUES (@textHash, @settingsHash, @chunkIndex, @article, @heading, @text, @body,
                @charCount, @tokenCount, @startOffset, @endOffset, 1)
        ON CONFLICT(text_hash, settings_hash, chunk_index) DO UPDATE SET
          article = excluded.article,
          heading = excluded.heading,
          text = excluded.text,
+         body = excluded.body,
          char_count = excluded.char_count,
          token_count = excluded.token_count,
          start_offset = excluded.start_offset,

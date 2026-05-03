@@ -34,6 +34,7 @@ function makeDoc(
             article: null,
             heading: null,
             text: "",
+            body: null,
             charCount: 0,
             tokenCount: 0,
             startOffset: 0,
@@ -54,6 +55,8 @@ function makeDoc(
           letterRatio: 40,
           dehyphenate: true,
           splitByArticle: true,
+          chunkingStrategy: "articleAware" as const,
+          normalizePlaceholders: false,
           duplicateMinChars: 60,
           dropDuplicates: false,
         }

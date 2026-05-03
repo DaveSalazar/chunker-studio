@@ -17,11 +17,13 @@ export interface SidebarProps {
 
   folder: ChunkerSession["folder"];
   parsedPaths: ReadonlySet<string>;
+  indexableCount: number;
   onSelectFolder: () => void;
   onCloseFolder: () => void;
   onRefreshFolder: () => void;
   onLoadEntry: ChunkerSession["loadEntry"];
   onParseAllEntries: () => void;
+  onIndexAll: () => void;
 
   settingsCollapsed: boolean;
   onToggleSettingsCollapsed: () => void;
@@ -40,11 +42,13 @@ export function Sidebar({
   onClearOverride,
   folder,
   parsedPaths,
+  indexableCount,
   onSelectFolder,
   onCloseFolder,
   onRefreshFolder,
   onLoadEntry,
   onParseAllEntries,
+  onIndexAll,
   settingsCollapsed,
   onToggleSettingsCollapsed,
   folderCollapsed,
@@ -71,11 +75,13 @@ export function Sidebar({
         loading={folder?.loading ?? "idle"}
         error={folder?.error ?? null}
         parsedPaths={parsedPaths}
+        indexableCount={indexableCount}
         onSelectFolder={onSelectFolder}
         onCloseFolder={onCloseFolder}
         onRefresh={onRefreshFolder}
         onLoadEntry={onLoadEntry}
         onParseAll={onParseAllEntries}
+        onIndexAll={onIndexAll}
         collapsed={folderCollapsed}
         onToggleCollapsed={onToggleFolderCollapsed}
       />

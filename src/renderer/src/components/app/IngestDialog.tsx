@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CloudUpload } from "lucide-react";
+import { AlertTriangle, CloudUpload } from "lucide-react";
 import {
   Dialog,
   DialogBody,
@@ -20,6 +20,14 @@ import {
 import { useT } from "@/lib/i18n";
 import { chunkerClient, ChunkerError } from "@/services/chunker-client";
 import { PRICE_PER_M_TOKENS_USD, type ChunkRecord } from "@shared/types";
+
+/**
+ * Soft cap on a template body's token count. Above this, the operator
+ * sees a warning so they know each draft request that retrieves this
+ * template will spend more on input tokens (the body is what the LLM
+ * receives as scaffold). Non-blocking; ingestion proceeds either way.
+ */
+const TEMPLATE_BODY_TOKEN_WARN_LIMIT = 8000;
 
 export interface IngestDialogProps {
   open: boolean;
@@ -75,6 +83,17 @@ export function IngestDialog({
     () => (estimatedTokens / 1_000_000) * PRICE_PER_M_TOKENS_USD,
     [estimatedTokens],
   );
+
+  // Surface a per-chunk warning when any whole-document body crosses the
+  // template token threshold. Computed only over chunks that actually
+  // carry a body — article-aware chunks won't trigger this.
+  const heavyBodyTokens = useMemo(() => {
+    let max = 0;
+    for (const c of chunks) {
+      if (c.body !== null && c.tokenCount > max) max = c.tokenCount;
+    }
+    return max >= TEMPLATE_BODY_TOKEN_WARN_LIMIT ? max : null;
+  }, [chunks]);
 
   const start = async () => {
     if (!profile || !isFormReady(profile, values)) return;
@@ -133,15 +152,27 @@ export function IngestDialog({
               {loadError}
             </p>
           ) : (
-            <IngestForm
-              profile={profile}
-              profiles={profiles}
-              onSelectProfile={selectProfile}
-              values={values}
-              onChangeValue={changeValue}
-              chunkCount={chunks.length}
-              estimatedCostUsd={estimatedCost}
-            />
+            <>
+              {heavyBodyTokens !== null && (
+                <p className="flex items-start gap-2 rounded-md border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-xs text-amber-300">
+                  <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+                  <span>
+                    {t("ingest.bodyTokenWarning", {
+                      tokens: heavyBodyTokens.toLocaleString(),
+                    })}
+                  </span>
+                </p>
+              )}
+              <IngestForm
+                profile={profile}
+                profiles={profiles}
+                onSelectProfile={selectProfile}
+                values={values}
+                onChangeValue={changeValue}
+                chunkCount={chunks.length}
+                estimatedCostUsd={estimatedCost}
+              />
+            </>
           ))}
         {phase.kind === "running" && <IngestProgressView progress={phase.progress} />}
         {phase.kind === "done" && <IngestSuccessView summary={phase.summary} />}

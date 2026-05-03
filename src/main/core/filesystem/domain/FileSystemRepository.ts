@@ -9,7 +9,7 @@ export interface FileSystemRepository {
 
   /**
    * Recursively walk a folder, returning every supported document
-   * (pdf/docx/doc/txt/md) as a flat list. Hidden files and directories
+   * (pdf/docx/txt/md) as a flat list. Hidden files and directories
    * named in `IGNORED_DIRECTORIES` are skipped.
    */
   listSupported(folderPath: string): Promise<FolderEntry[]>;

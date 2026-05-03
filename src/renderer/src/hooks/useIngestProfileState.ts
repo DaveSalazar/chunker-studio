@@ -1,40 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { chunkerClient } from "@/services/chunker-client";
+import { initialValuesForProfile, isFormReady } from "@/lib/profileFieldDefaults";
 import type { SchemaProfile } from "@shared/types";
 
-function defaultSourceName(documentName: string | null): string {
-  if (!documentName) return "";
-  const dot = documentName.lastIndexOf(".");
-  return dot > 0 ? documentName.slice(0, dot) : documentName;
-}
-
-function initialValuesForProfile(
-  profile: SchemaProfile,
-  documentName: string | null,
-): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const field of profile.documentFields) {
-    if (field.isSourceKey) {
-      out[field.key] = defaultSourceName(documentName);
-    } else if (field.defaultValue !== undefined) {
-      out[field.key] = field.defaultValue;
-    } else {
-      out[field.key] = "";
-    }
-  }
-  return out;
-}
-
-export function isFormReady(
-  profile: SchemaProfile | null,
-  values: Record<string, string>,
-): boolean {
-  if (!profile) return false;
-  for (const f of profile.documentFields) {
-    if (f.required && (!values[f.key] || values[f.key].trim() === "")) return false;
-  }
-  return true;
-}
+// Re-export so existing callers (IngestDialog, IngestFooter) keep their
+// import path. Field-defaults logic lives in the shared util module so
+// the batch Index-all flow can share it.
+export { isFormReady };
 
 export interface IngestProfileState {
   profiles: SchemaProfile[];

@@ -5,6 +5,7 @@ import { DocumentWorkspace } from "@/components/app/DocumentWorkspace";
 import { Sidebar } from "@/components/app/Sidebar";
 import { SettingsDialog } from "@/components/app/SettingsDialog";
 import { IngestDialog } from "@/components/app/IngestDialog";
+import { IndexAllDialog } from "@/components/app/IndexAllDialog";
 import {
   type ImperativePanelHandle,
   ResizablePanel,
@@ -21,6 +22,7 @@ export default function App() {
   const [activeChunkIndex, setActiveChunkIndex] = useState<number | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [ingestOpen, setIngestOpen] = useState(false);
+  const [indexAllOpen, setIndexAllOpen] = useState(false);
   const { resolved: themeResolved, toggleLightDark } = useTheme();
 
   const sidebarPanelRef = useRef<ImperativePanelHandle>(null);
@@ -41,7 +43,7 @@ export default function App() {
   };
 
   const { documents, activeId, active: activeDoc, effectiveSettings,
-    hasOverride, scope, totals, folder, parsedPaths } = session;
+    hasOverride, scope, totals, folder, parsedPaths, indexableDocuments } = session;
 
   const file = activeDoc?.file ?? null;
   const { duplicateInfo, duplicateIndices, effectiveResult } = useEffectiveResult(
@@ -101,11 +103,13 @@ export default function App() {
               onClearOverride={session.clearOverride}
               folder={folder}
               parsedPaths={parsedPaths}
+              indexableCount={indexableDocuments.length}
               onSelectFolder={session.selectFolder}
               onCloseFolder={session.closeFolder}
               onRefreshFolder={session.refreshFolder}
               onLoadEntry={session.loadEntry}
               onParseAllEntries={session.parseAllEntries}
+              onIndexAll={() => setIndexAllOpen(true)}
               settingsCollapsed={settingsCollapsed}
               onToggleSettingsCollapsed={() => setSettingsCollapsed((v) => !v)}
               folderCollapsed={folderCollapsed}
@@ -164,6 +168,15 @@ export default function App() {
         estimatedTokens={effectiveResult?.totalTokens ?? 0}
         onOpenSettings={() => {
           setIngestOpen(false);
+          setSettingsOpen(true);
+        }}
+      />
+      <IndexAllDialog
+        open={indexAllOpen}
+        onOpenChange={setIndexAllOpen}
+        documents={indexableDocuments}
+        onOpenSettings={() => {
+          setIndexAllOpen(false);
           setSettingsOpen(true);
         }}
       />

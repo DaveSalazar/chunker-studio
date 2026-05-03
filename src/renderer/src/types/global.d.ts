@@ -3,6 +3,7 @@ import type {
   ChunkSettings,
   ChunkingResult,
   ConnectionTestResult,
+  DocxHtmlPreview,
   ExportRequest,
   ExportResult,
   FolderEntry,
@@ -20,6 +21,7 @@ import type {
 export interface ChunkerApi {
   pickFiles: (options?: { multi?: boolean }) => Promise<IpcResult<OpenedFile[]>>;
   parseDocument: (filePath: string) => Promise<IpcResult<ParsedDocument>>;
+  renderDocxHtml: (filePath: string) => Promise<IpcResult<DocxHtmlPreview>>;
   chunk: (text: string, settings: ChunkSettings) => Promise<IpcResult<ChunkingResult>>;
   countTokens: (texts: string[]) => Promise<IpcResult<number[]>>;
   saveManualBoundary: (request: ManualBoundaryEditRequest) => Promise<IpcResult<true>>;

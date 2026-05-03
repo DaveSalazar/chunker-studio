@@ -4,6 +4,7 @@ import type {
   ChunkSettings,
   ChunkingResult,
   ConnectionTestResult,
+  DocxHtmlPreview,
   ExportRequest,
   ExportResult,
   FolderEntry,
@@ -25,6 +26,8 @@ const api = {
     ipcRenderer.invoke("file:pick", options),
   parseDocument: (filePath: string): Promise<IpcResult<ParsedDocument>> =>
     ipcRenderer.invoke("document:parse", filePath),
+  renderDocxHtml: (filePath: string): Promise<IpcResult<DocxHtmlPreview>> =>
+    ipcRenderer.invoke("document:renderDocxHtml", filePath),
   chunk: (
     text: string,
     settings: ChunkSettings,

@@ -44,6 +44,7 @@ export function runRowToDomain(run: RunRow, chunkRows: ChunkRow[]): CachedChunki
     article: r.article,
     heading: r.heading,
     text: r.text,
+    body: r.body,
     charCount: r.char_count,
     tokenCount: r.token_count,
     startOffset: r.start_offset,
@@ -56,7 +57,7 @@ export function runRowToDomain(run: RunRow, chunkRows: ChunkRow[]): CachedChunki
     chunks,
     totalTokens: run.total_tokens,
     totalChars: run.total_chars,
-    strategy: run.strategy === "paragraph" ? "paragraph" : "article",
+    strategy: normalizeStrategy(run.strategy),
     normalizedText: run.normalized_text,
     estimatedCostUsd: run.estimated_cost_usd,
   };
@@ -83,9 +84,19 @@ export function chunkParams(
     article: chunk.article,
     heading: chunk.heading,
     text: chunk.text,
+    body: chunk.body,
     charCount: chunk.charCount,
     tokenCount: chunk.tokenCount,
     startOffset: chunk.startOffset,
     endOffset: chunk.endOffset,
   };
+}
+
+/** Map a stored strategy string back into the typed union. Anything
+ *  unrecognized (e.g. a future strategy from a newer build that wrote
+ *  this row) falls back to "article" so the renderer doesn't crash. */
+function normalizeStrategy(value: string): ChunkingResult["strategy"] {
+  if (value === "paragraph") return "paragraph";
+  if (value === "wholeDocument") return "wholeDocument";
+  return "article";
 }

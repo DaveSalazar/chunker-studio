@@ -45,6 +45,8 @@ export interface ChunkBaseParams extends RunKey {
   article: string | null;
   heading: string | null;
   text: string;
+  /** Verbatim source text for whole-document chunks; null otherwise. */
+  body: string | null;
   charCount: number;
   tokenCount: number;
   startOffset: number;

@@ -33,13 +33,19 @@ export function planLayout(
     }
   }
 
-  // Per-chunk fields. text + embedding are required; article/heading
-  // optional and only added when the profile maps them to a column.
+  // Per-chunk fields. text + embedding are required; article/heading/body
+  // optional and only added when the profile maps them to a column. The
+  // body column carries the verbatim source text emitted by the
+  // wholeDocument strategy — for article-aware chunks the value is null,
+  // which the writer happily passes through.
   if (profile.articleColumn) {
     columns.push({ name: profile.articleColumn, valueFor: (c) => c.article });
   }
   if (profile.headingColumn) {
     columns.push({ name: profile.headingColumn, valueFor: (c) => c.heading });
+  }
+  if (profile.bodyColumn) {
+    columns.push({ name: profile.bodyColumn, valueFor: (c) => c.body });
   }
   columns.push({ name: profile.textColumn, valueFor: (c) => c.text });
   columns.push({

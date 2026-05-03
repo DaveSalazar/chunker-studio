@@ -108,3 +108,66 @@
     text-wrap: balance;
   }
 }
+
+/*
+ * Scoped typography for the .docx preview pane. Tailwind's prose plugin
+ * isn't in the dep tree, so we inline the rules here. The class is
+ * applied by DocxPreview.tsx and the styles only target descendants of
+ * `.docx-preview` so they don't leak into the rest of the app.
+ */
+.docx-preview h1 {
+  @apply mb-3 mt-6 text-2xl font-bold first:mt-0;
+}
+.docx-preview h2 {
+  @apply mb-2 mt-5 text-xl font-semibold first:mt-0;
+}
+.docx-preview h3 {
+  @apply mb-2 mt-4 text-lg font-semibold first:mt-0;
+}
+.docx-preview h4,
+.docx-preview h5,
+.docx-preview h6 {
+  @apply mb-1.5 mt-3 text-base font-semibold first:mt-0;
+}
+.docx-preview p {
+  @apply my-3;
+}
+.docx-preview ul {
+  @apply my-3 list-disc pl-6;
+}
+.docx-preview ol {
+  @apply my-3 list-decimal pl-6;
+}
+.docx-preview li {
+  @apply my-0.5;
+}
+.docx-preview table {
+  @apply my-4 w-full border-collapse text-sm;
+}
+.docx-preview th,
+.docx-preview td {
+  @apply border border-border px-2 py-1 align-top;
+}
+.docx-preview th {
+  @apply bg-secondary/50 text-left font-semibold;
+}
+.docx-preview a {
+  @apply text-primary underline underline-offset-2;
+}
+.docx-preview img {
+  @apply my-3 max-w-full rounded shadow-sm;
+}
+.docx-preview blockquote {
+  @apply my-3 border-l-2 border-border pl-3 italic text-muted-foreground;
+}
+.docx-preview hr {
+  @apply my-6 border-border;
+}
+.docx-preview strong,
+.docx-preview b {
+  @apply font-semibold text-foreground;
+}
+.docx-preview em,
+.docx-preview i {
+  @apply italic;
+}

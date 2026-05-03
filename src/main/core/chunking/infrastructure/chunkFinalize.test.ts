@@ -10,11 +10,14 @@ const settings = (overrides: Partial<ChunkSettings> = {}): ChunkSettings => ({
   letterRatio: 40,
   dehyphenate: true,
   splitByArticle: true,
+  chunkingStrategy: "articleAware",
+  normalizePlaceholders: false,
   ...overrides,
 });
 
 const raw = (overrides: Partial<RawChunk> = {}): RawChunk => ({
   text: "",
+  body: null,
   article: null,
   heading: null,
   startOffset: 0,

@@ -43,6 +43,8 @@ describe("safeParseSettings", () => {
     letterRatio: 40,
     dehyphenate: true,
     splitByArticle: true,
+    chunkingStrategy: "articleAware" as const,
+    normalizePlaceholders: false,
     duplicateMinChars: 60,
     dropDuplicates: false,
   };
@@ -75,6 +77,8 @@ describe("safeParseSettings", () => {
       "letterRatio",
       "dehyphenate",
       "splitByArticle",
+      "chunkingStrategy",
+      "normalizePlaceholders",
       "duplicateMinChars",
       "dropDuplicates",
     ];

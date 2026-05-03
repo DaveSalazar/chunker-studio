@@ -21,6 +21,7 @@ const baseHandlers = {
   onCloseFolder: () => {},
   onRefreshFolder: () => {},
   onParseAllEntries: () => {},
+  onIndexAll: () => {},
 };
 
 export const NoFolderNoDocs: Story = {
@@ -40,6 +41,7 @@ export const NoFolderNoDocs: Story = {
           onClearOverride={() => {}}
           folder={null}
           parsedPaths={new Set()}
+          indexableCount={0}
           onLoadEntry={() => {}}
           settingsCollapsed={false}
           onToggleSettingsCollapsed={() => {}}
@@ -79,6 +81,7 @@ export const FolderLoaded: Story = {
             error: null,
           }}
           parsedPaths={new Set(["/c/cootad.pdf"])}
+          indexableCount={1}
           onLoadEntry={() => {}}
           settingsCollapsed={false}
           onToggleSettingsCollapsed={() => {}}
@@ -105,6 +108,7 @@ export const Collapsed: Story = {
         onClearOverride={() => {}}
         folder={null}
         parsedPaths={new Set()}
+        indexableCount={0}
         onLoadEntry={() => {}}
         settingsCollapsed
         onToggleSettingsCollapsed={() => {}}

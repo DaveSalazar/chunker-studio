@@ -3,6 +3,7 @@ import type {
   ChunkSettings,
   ChunkingResult,
   ConnectionTestResult,
+  DocxHtmlPreview,
   ExportRequest,
   ExportResult,
   FolderEntry,
@@ -36,6 +37,9 @@ export const chunkerClient = {
   },
   async parseDocument(filePath: string): Promise<ParsedDocument> {
     return unwrap(await window.chunker.parseDocument(filePath));
+  },
+  async renderDocxHtml(filePath: string): Promise<DocxHtmlPreview> {
+    return unwrap(await window.chunker.renderDocxHtml(filePath));
   },
   async chunk(text: string, settings: ChunkSettings): Promise<ChunkingResult> {
     return unwrap(await window.chunker.chunk(text, settings));

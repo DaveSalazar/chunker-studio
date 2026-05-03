@@ -27,6 +27,8 @@ const settings: ChunkSettings = {
   letterRatio: 40,
   dehyphenate: true,
   splitByArticle: true,
+  chunkingStrategy: "articleAware",
+  normalizePlaceholders: false,
   duplicateMinChars: 60,
   dropDuplicates: false,
 };
@@ -36,6 +38,7 @@ const chunk = (overrides: Partial<ChunkRecord> = {}): ChunkRecord => ({
   article: null,
   heading: null,
   text: "x",
+  body: null,
   charCount: 1,
   tokenCount: 1,
   startOffset: 0,

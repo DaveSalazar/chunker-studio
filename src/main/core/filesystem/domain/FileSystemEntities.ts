@@ -21,7 +21,12 @@ export interface FolderEntry {
   extension: string;
 }
 
-export const SUPPORTED_EXTENSIONS = ["pdf", "docx", "doc", "txt", "md"] as const;
+// Legacy `.doc` (binary OLE2) is intentionally excluded — mammoth only
+// handles the Open XML `.docx`, and there's no honest way to render
+// `.doc` faithfully in the preview pane. Operators with `.doc` files
+// re-save them as `.docx` (Word: Save As → .docx; LibreOffice: same)
+// before importing.
+export const SUPPORTED_EXTENSIONS = ["pdf", "docx", "txt", "md"] as const;
 export type SupportedExtension = (typeof SUPPORTED_EXTENSIONS)[number];
 
 export function isSupportedExtension(ext: string): ext is SupportedExtension {

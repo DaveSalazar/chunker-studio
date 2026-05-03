@@ -59,6 +59,7 @@ const chunk = (i: number, article: string): ChunkRecord => ({
   article,
   heading: "TÍTULO I: PRINCIPIOS GENERALES",
   text: parsedText.split("\n\n")[i] ?? "",
+  body: null,
   charCount: 160 + i * 4,
   tokenCount: 40 + i,
   startOffset: i * 200,

@@ -89,6 +89,18 @@ export const es: Translations = {
         "Conserva solo la primera aparición de cada grupo de duplicados",
       dropDuplicatesHelp:
         "Cuando está activo, el panel de chunks y la carga de ingesta solo incluyen un chunk por cada grupo de duplicados (la primera aparición). El chunk conservado sigue mostrando la insignia ×N para que sepas cuántas copias se fusionaron. No tiene efecto cuando la detección mínima de caracteres es 0.",
+      strategy: "Estrategia de chunking",
+      strategyHelp:
+        "Por artículos: divide referencias estructuradas (códigos, leyes, reglamentos) por marcadores Art. N, con fallback a párrafos. Documento entero: emite un solo chunk por archivo y conserva el cuerpo completo — para plantillas (minutas, demandas, contratos) donde el LLM necesita el documento entero como base.",
+      strategy_articleAware: "Por artículos",
+      strategy_wholeDocument: "Documento entero",
+      normalizePlaceholders: "Normalizar placeholders",
+      normalizePlaceholdersDescription:
+        "Reescribe blancos (___, NOMBRE: ___) como tokens <<PLACEHOLDER>>",
+      normalizePlaceholdersHelp:
+        "Pre-paso que convierte los blancos de la plantilla al formato <<NOMBRE>> que el backend del chat ya sabe resaltar al generar DOCX. Solo disponible en modo documento entero — los códigos no tienen blancos.",
+      bodyTokenWarning:
+        "El cuerpo de la plantilla es grande ({tokens} tokens). Cada solicitud de redacción que recupere esta plantilla pagará más en tokens de entrada.",
     },
     units: {
       tokens: "tok",
@@ -116,6 +128,12 @@ export const es: Translations = {
     parseAllNoneTitle: "Todos los archivos ya están procesados",
     parseAllRemainingTitle: "Procesar {count} documento",
     parseAllRemainingTitlePlural: "Procesar {count} documentos",
+    indexAll: "Indexar todos",
+    indexAllCount: "Indexar todos ({count})",
+    indexAllNoneTitle:
+      "Ningún documento está listo para indexar — primero parsea + chunkea",
+    indexAllRemainingTitle: "Indexar {count} documento",
+    indexAllRemainingTitlePlural: "Indexar {count} documentos",
   },
   stats: {
     documents: "Documentos",
@@ -155,8 +173,8 @@ export const es: Translations = {
     pdfFailed: "No se pudo cargar el PDF.",
     pdfPrevPage: "Página anterior",
     pdfNextPage: "Página siguiente",
-    docxNoPreview:
-      "No hay vista previa para DOCX — pulsa Procesar para extraer su texto.",
+    docxLoading: "Renderizando vista previa DOCX…",
+    docxFailed: "No se pudo renderizar la vista previa DOCX.",
     unsupportedNoPreview:
       "No hay vista previa para este formato — pulsa Procesar para extraer su texto.",
     textLoading: "Leyendo archivo…",
@@ -282,6 +300,8 @@ export const es: Translations = {
     referenceGroup: "Referencia",
     templateGroup: "Plantillas",
     ready: "Listo para indexar {count} chunks · ~${cost} en text-embedding-3-small",
+    bodyTokenWarning:
+      "El cuerpo de esta plantilla es grande ({tokens} tokens). Cada solicitud del chat que la recupere pagará más en tokens de entrada.",
     start: "Iniciar indexado",
     cancel: "Cancelar",
     embedding: "Generando embedding {processed} de {total}…",
@@ -311,5 +331,19 @@ export const es: Translations = {
       manual: "Manual",
       plantilla: "Plantilla",
     },
+  },
+  indexAll: {
+    title: "Indexar todos los documentos listos",
+    description:
+      "Genera embeddings e inserta los {count} documentos cargados en la tabla del perfil de schema seleccionado. Una sola pasada, secuencial e idempotente — re-ejecuciones reemplazan las filas previas de cada fuente.",
+    ready: "Listo para indexar {count} documentos · los campos por documento se derivan del nombre del archivo.",
+    bodyTokenWarning:
+      "Al menos un cuerpo de plantilla es grande ({tokens} tokens). Cada solicitud de redacción del chat que la recupere pagará más en tokens de entrada.",
+    start: "Indexar {count}",
+    runningOuter: "Documento {index} de {total} — {name}",
+    runningFooter: "Indexando documento {index} de {total}…",
+    summary: "{ok} de {total} documentos indexados · {chunks} chunks insertados",
+    summaryErrors: "{count} documento(s) fallaron — revisa la lista abajo.",
+    errorTitle: "Indexación por lotes abortada",
   },
 };

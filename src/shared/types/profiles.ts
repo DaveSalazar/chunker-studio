@@ -11,6 +11,7 @@ export const REFERENCE_SOURCE_TYPES = [
   "constitucion",
 ] as const;
 export const TEMPLATE_SOURCE_TYPES = [
+  "minuta",
   "demanda",
   "contrato",
   "escrito",
@@ -60,9 +61,22 @@ export interface DocumentField {
   options?: DocumentFieldOption[];
   defaultValue?: string;
   isSourceKey?: boolean;
+  /**
+   * Marks the field that holds the human-readable title. The IngestDialog
+   * seeds it from the filename (cleaned: dashes → spaces, sentence-cased).
+   * At most one field per profile may carry this flag. Used by the
+   * wholeDocument strategy where the slug (`isSourceKey`) and the
+   * display label are different concepts.
+   */
+  isTitleKey?: boolean;
 }
 
-export type ChunkingStrategyId = "articleAware" | "paragraph";
+// `ChunkingStrategyId` lives in ./chunks (imported below) so the runtime
+// ChunkSettings type and the profile selection share one source. The
+// public barrel re-exports it from the chunks module — no alias here to
+// avoid a duplicate-export collision when both files re-export through
+// `export * from`.
+import type { ChunkingStrategyId } from "./chunks";
 
 export interface SchemaProfile {
   id: string;
@@ -70,7 +84,7 @@ export interface SchemaProfile {
   description: string;
   /** Target table. */
   table: string;
-  /** Required: the per-chunk text column. */
+  /** Required: the per-chunk text column (what gets embedded). */
   textColumn: string;
   /** Required: the per-chunk embedding column (vector type). */
   embeddingColumn: string;
@@ -78,6 +92,14 @@ export interface SchemaProfile {
   articleColumn: string | null;
   /** Per-chunk heading column. Null when the profile doesn't track headings. */
   headingColumn: string | null;
+  /**
+   * Per-chunk body column. When set, the writer stores the chunk's full
+   * `body` (verbatim source text) here, separate from the `text` column
+   * that holds the embedded intent surface. Only the wholeDocument
+   * strategy emits a non-null body; for article-aware chunking this
+   * stays null on the profile and the column isn't written.
+   */
+  bodyColumn?: string | null;
   /** Per-document constant fields written to every inserted row. */
   documentFields: DocumentField[];
   /** Default chunking strategy when this profile is active. */

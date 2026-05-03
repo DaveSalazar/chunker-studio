@@ -42,27 +42,29 @@ describe("migrate (schema)", () => {
     );
   });
 
-  it("stamps schema_meta version = 3 on a fresh DB", () => {
+  it("stamps schema_meta version = 4 on a fresh DB", () => {
     const db = new Database(":memory:");
     migrate(db);
-    expect(schemaVersion(db)).toBe(3);
+    expect(schemaVersion(db)).toBe(4);
   });
 
-  it("includes the v3 columns on a fresh DB (no separate ALTER needed)", () => {
+  it("includes the v3 + v4 columns on a fresh DB (no separate ALTER needed)", () => {
     const db = new Database(":memory:");
     migrate(db);
     expect(tableHas(db, "parsed_documents", "unsupported_reason")).toBe(true);
     expect(tableHas(db, "parsed_documents", "page_offsets_json")).toBe(true);
+    // v4 added a body column on chunks for the wholeDocument strategy.
+    expect(tableHas(db, "chunks", "body")).toBe(true);
   });
 
   it("is idempotent — running twice produces the same state", () => {
     const db = new Database(":memory:");
     migrate(db);
     expect(() => migrate(db)).not.toThrow();
-    expect(schemaVersion(db)).toBe(3);
+    expect(schemaVersion(db)).toBe(4);
   });
 
-  it("migrates a v1 DB up to v3 (adds unsupported_reason and page_offsets_json)", () => {
+  it("migrates a v1 DB up to v4 (adds unsupported_reason, page_offsets_json, body)", () => {
     // Simulate a pre-v2 DB without the v2/v3 columns by creating
     // tables manually + stamping version=1.
     const db = new Database(":memory:");
@@ -88,10 +90,11 @@ describe("migrate (schema)", () => {
 
     expect(tableHas(db, "parsed_documents", "unsupported_reason")).toBe(true);
     expect(tableHas(db, "parsed_documents", "page_offsets_json")).toBe(true);
-    expect(schemaVersion(db)).toBe(3);
+    expect(tableHas(db, "chunks", "body")).toBe(true);
+    expect(schemaVersion(db)).toBe(4);
   });
 
-  it("preserves existing rows through a v1 → v3 migration", () => {
+  it("preserves existing rows through a v1 → v4 migration", () => {
     const db = new Database(":memory:");
     db.exec(`
       CREATE TABLE schema_meta (key TEXT PRIMARY KEY, value INTEGER NOT NULL);

@@ -15,6 +15,7 @@ const articleChunk = (i: number, article: string): ChunkRecord => ({
   article,
   heading: `TÍTULO I: PRINCIPIOS GENERALES`,
   text: "Art. " + article + ". — texto del artículo …",
+  body: null,
   charCount: 480 + i * 8,
   tokenCount: 130 + i,
   startOffset: i * 500,

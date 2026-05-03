@@ -30,6 +30,7 @@ export function chunkByParagraphs(
     const joined = buffer.map((p) => p.text).join("\n\n");
     out.push({
       text: joined,
+      body: null,
       article: null,
       heading: null,
       startOffset: chunkStart,

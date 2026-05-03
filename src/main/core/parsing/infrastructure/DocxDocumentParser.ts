@@ -7,7 +7,11 @@ import type { FileSystemRepository } from "../../filesystem/domain/FileSystemRep
 
 @injectable()
 export class DocxDocumentParser implements DocumentParser {
-  readonly extensions = ["docx", "doc"] as const;
+  // `.doc` (legacy binary OLE2) is not handled — mammoth only supports
+  // the Open XML `.docx` format. Folder-walking already filters `.doc`
+  // out of SUPPORTED_EXTENSIONS so we don't see them through the
+  // registry; this list keeps the parser honest about what it owns.
+  readonly extensions = ["docx"] as const;
 
   constructor(
     @inject(FileSystemLocator.FileSystemRepository)

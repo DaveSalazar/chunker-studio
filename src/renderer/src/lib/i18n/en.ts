@@ -81,6 +81,15 @@ export const en = {
       splitByArticle: "Split by article when possible",
       splitByArticleDescription: "Use Art. N markers as boundaries when ≥ 3 are found",
       splitByArticleHelp: "When the document is article-structured (laws, codes), splits on “Art. N” markers instead of paragraph spacing. Falls back automatically if not enough markers are detected.",
+      strategy: "Chunking strategy",
+      strategyHelp: "Article-aware: chunk a structured reference (code, law, regulation) by Art. N markers, falling back to paragraphs. Whole document: emit one chunk per file with the full body kept verbatim — for templates (minutas, demandas, contratos) where the LLM downstream needs the entire document as scaffold.",
+      strategy_articleAware: "Article-aware",
+      strategy_wholeDocument: "Whole document",
+      normalizePlaceholders: "Normalize placeholders",
+      normalizePlaceholdersDescription: "Rewrite blanks (___, NOMBRE: ___) into <<PLACEHOLDER>> tokens",
+      normalizePlaceholdersHelp: "Pre-pass that converts in-template blanks into the <<NAME>> form the chat backend already knows how to highlight in generated DOCX. Only available in whole-document mode — codes have no blanks.",
+      bodyTokenWarning:
+        "Template body is large ({tokens} tokens). Each draft request that retrieves this template will spend more on input tokens.",
     },
     units: {
       tokens: "tok",
@@ -108,6 +117,11 @@ export const en = {
     parseAllNoneTitle: "All entries already parsed",
     parseAllRemainingTitle: "Parse {count} document",
     parseAllRemainingTitlePlural: "Parse {count} documents",
+    indexAll: "Index all",
+    indexAllCount: "Index all ({count})",
+    indexAllNoneTitle: "No documents are ready to index — parse + chunk them first",
+    indexAllRemainingTitle: "Index {count} document",
+    indexAllRemainingTitlePlural: "Index {count} documents",
   },
   stats: {
     documents: "Documents",
@@ -145,7 +159,8 @@ export const en = {
     pdfFailed: "Could not load the PDF.",
     pdfPrevPage: "Previous page",
     pdfNextPage: "Next page",
-    docxNoPreview: "DOCX preview is not available — click Parse to extract its text.",
+    docxLoading: "Rendering DOCX preview…",
+    docxFailed: "Could not render the DOCX preview.",
     unsupportedNoPreview: "No preview is available for this format — click Parse to extract its text.",
     textLoading: "Reading file…",
     textFailed: "Could not read the file.",
@@ -268,6 +283,8 @@ export const en = {
     templateGroup: "Templates",
     ready: "Ready to index {count} chunks · ~${cost}",
     readyLocal: "Ready to index {count} chunks · {model} (local, no token cost)",
+    bodyTokenWarning:
+      "This template body is large ({tokens} tokens). Each chat request that retrieves it will spend more on input tokens.",
     start: "Start indexing",
     cancel: "Cancel",
     embedding: "Embedding chunk {processed} of {total}…",
@@ -297,6 +314,20 @@ export const en = {
       manual: "Manual",
       plantilla: "Template",
     },
+  },
+  indexAll: {
+    title: "Index all ready documents",
+    description:
+      "Embed and insert {count} loaded documents into the table targeted by the chosen schema profile. One pass, sequential, idempotent — re-runs replace each source's prior rows.",
+    ready: "Ready to index {count} documents · per-doc fields are derived from filenames.",
+    bodyTokenWarning:
+      "At least one template body is large ({tokens} tokens). Each chat draft request that retrieves it will spend more on input tokens.",
+    start: "Index {count}",
+    runningOuter: "Document {index} of {total} — {name}",
+    runningFooter: "Indexing document {index} of {total}…",
+    summary: "{ok} of {total} documents indexed · {chunks} chunks inserted",
+    summaryErrors: "{count} document(s) failed — see the list below.",
+    errorTitle: "Batch indexing aborted",
   },
 };
 

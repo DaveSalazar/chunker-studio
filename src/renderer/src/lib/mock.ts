@@ -82,6 +82,7 @@ function recordFor(
     article,
     heading,
     text,
+    body: null,
     charCount: text.length,
     tokenCount,
     startOffset: start,

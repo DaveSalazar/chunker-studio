@@ -22,6 +22,8 @@ export function safeParseSettings(raw: string): ChunkSettings {
       letterRatio: 0,
       dehyphenate: false,
       splitByArticle: false,
+      chunkingStrategy: "articleAware",
+      normalizePlaceholders: false,
       duplicateMinChars: 0,
       dropDuplicates: false,
     };

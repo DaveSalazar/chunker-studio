@@ -24,6 +24,20 @@ export interface ParsedDocument {
   unsupportedReason?: UnsupportedParseReason;
 }
 
+/**
+ * Top-level chunking strategy.
+ *
+ *   "articleAware"  — detect Art. N markers; fall back to paragraph
+ *                     grouping when fewer than three are found.
+ *   "wholeDocument" — emit exactly one chunk per file; embedded text is
+ *                     a synthesized intent surface (first ~1500 chars),
+ *                     full text travels in the body field for downstream
+ *                     verbatim use (template generation).
+ *   "paragraph"     — deprecated alias for "articleAware". Kept here so
+ *                     pre-migration profiles on disk still validate.
+ */
+export type ChunkingStrategyId = "articleAware" | "paragraph" | "wholeDocument";
+
 export interface ChunkSettings {
   maxChunkTokens: number;
   minChunkChars: number;
@@ -31,6 +45,21 @@ export interface ChunkSettings {
   letterRatio: number;
   dehyphenate: boolean;
   splitByArticle: boolean;
+  /**
+   * Top-level chunking strategy. The dispatcher routes "wholeDocument"
+   * to the single-chunk-per-file path; everything else routes to the
+   * article-aware path (which itself decides article vs paragraph based
+   * on splitByArticle + how many Art. N markers it finds).
+   */
+  chunkingStrategy: ChunkingStrategyId;
+  /**
+   * When true, a placeholder pre-pass rewrites in-template blanks
+   * (`___`, `NOMBRE: ___`, `fecha __ de __ de 20__`) into the
+   * `<<NOMBRE>>` / `<<FECHA>>` form the chat backend's system prompt
+   * already knows how to surface. Only applied for the wholeDocument
+   * strategy — codes have no blanks.
+   */
+  normalizePlaceholders: boolean;
   /**
    * Minimum normalized-text length (in chars) for the renderer to flag
    * a chunk as a duplicate of another. 0 disables duplicate highlighting.
@@ -54,6 +83,8 @@ export const DEFAULT_CHUNK_SETTINGS: ChunkSettings = {
   letterRatio: 40,
   dehyphenate: true,
   splitByArticle: true,
+  chunkingStrategy: "articleAware",
+  normalizePlaceholders: false,
   duplicateMinChars: 60,
   dropDuplicates: false,
 };
@@ -63,6 +94,13 @@ export interface ChunkRecord {
   article: string | null;
   heading: string | null;
   text: string;
+  /**
+   * Full document text for the wholeDocument strategy; null otherwise.
+   * `text` carries the embedded intent surface; `body` carries the
+   * verbatim payload that downstream consumers (template generation in
+   * the backend) hand to the LLM as scaffold.
+   */
+  body: string | null;
   charCount: number;
   tokenCount: number;
   startOffset: number;
@@ -78,7 +116,7 @@ export interface ChunkingResult {
   chunks: ChunkRecord[];
   totalTokens: number;
   totalChars: number;
-  strategy: "article" | "paragraph";
+  strategy: "article" | "paragraph" | "wholeDocument";
   normalizedText: string;
   estimatedCostUsd: number;
   /**
@@ -94,4 +132,16 @@ export interface ManualBoundaryEditRequest {
   leftIndex: number;
   left: ChunkRecord;
   right: ChunkRecord;
+}
+
+/**
+ * mammoth.convertToHtml output for the original-file viewer's .docx
+ * preview pane. The HTML is sanitized in the renderer (see
+ * sanitizeDocxHtml) before being handed to React. `warnings` mirrors
+ * the messages mammoth emits — most are about styles it couldn't
+ * preserve, which is fine for a preview but useful for debugging.
+ */
+export interface DocxHtmlPreview {
+  html: string;
+  warnings: string[];
 }

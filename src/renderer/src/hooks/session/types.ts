@@ -1,4 +1,5 @@
 import type {
+  ChunkRecord,
   ChunkSettings,
   ChunkingResult,
   FolderEntry,
@@ -63,6 +64,19 @@ export interface ChunkerSessionState {
   tempId: string | null;
 }
 
+/**
+ * Subset of a DocumentEntry that's ready to ship to corpus_chunks: it
+ * has a name, has finished chunking, and produced ≥1 useful chunk.
+ * Surfaced as a derived projection so the FolderPanel button and the
+ * IndexAllDialog see the same view of "what would be indexed."
+ */
+export interface IndexableDocument {
+  id: string;
+  fileName: string;
+  chunks: ChunkRecord[];
+  totalTokens: number;
+}
+
 export interface ChunkerSession extends ChunkerSessionState {
   active: DocumentEntry | null;
   /** Settings the active document is currently rendered with (override or global). */
@@ -74,6 +88,8 @@ export interface ChunkerSession extends ChunkerSessionState {
   loadedPaths: ReadonlySet<string>;
   /** Set of document paths whose parsing has completed — folder UI uses it for the green check. */
   parsedPaths: ReadonlySet<string>;
+  /** Documents currently shippable to corpus_chunks. Drives the Index-all button + dialog. */
+  indexableDocuments: IndexableDocument[];
 
   openFiles: () => Promise<void>;
   closeDocument: (id: string) => void;

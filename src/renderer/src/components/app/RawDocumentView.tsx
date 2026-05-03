@@ -1,4 +1,5 @@
 import { FileText } from "lucide-react";
+import { DocxPreview } from "@/components/app/DocxPreview";
 import { PdfPreview } from "@/components/app/PdfPreview";
 import { TextPreview } from "@/components/app/TextPreview";
 import { EmptyState } from "@/components/app/EmptyState";
@@ -39,6 +40,7 @@ export function RawDocumentView({
         onPageChange={onPdfPageChange}
       />
     );
+  if (ext === "docx") return <DocxPreview filePath={file.path} />;
   if (ext === "txt" || ext === "md") return <TextPreview filePath={file.path} />;
 
   return (
@@ -46,11 +48,7 @@ export function RawDocumentView({
       <EmptyState
         icon={FileText}
         title={file.name}
-        description={
-          ext === "docx" || ext === "doc"
-            ? t("viewer.docxNoPreview")
-            : t("viewer.unsupportedNoPreview")
-        }
+        description={t("viewer.unsupportedNoPreview")}
       />
     </div>
   );

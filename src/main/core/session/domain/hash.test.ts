@@ -9,6 +9,8 @@ const baseSettings = (overrides: Partial<ChunkSettings> = {}): ChunkSettings => 
   letterRatio: 40,
   dehyphenate: true,
   splitByArticle: true,
+  chunkingStrategy: "articleAware",
+  normalizePlaceholders: false,
   duplicateMinChars: 60,
   dropDuplicates: false,
   ...overrides,

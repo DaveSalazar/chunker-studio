@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { AlertTriangle, Folder, Search, Wand2 } from "lucide-react";
+import { AlertTriangle, Folder, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FolderActions } from "@/components/app/FolderActions";
+import { FolderBatchActions } from "@/components/app/FolderBatchActions";
 import { FolderEmpty } from "@/components/app/FolderEmpty";
 import { FolderHeader } from "@/components/app/FolderHeader";
 import { FolderList } from "@/components/app/FolderList";
@@ -19,12 +19,15 @@ export interface FolderPanelProps {
 
   /** Set of doc paths that have completed parsing — drives the green check. */
   parsedPaths: ReadonlySet<string>;
+  /** How many currently loaded documents are ready to ship to corpus_chunks. */
+  indexableCount: number;
 
   onSelectFolder: () => void;
   onCloseFolder: () => void;
   onRefresh: () => void;
   onLoadEntry: (entry: FolderEntry, opts?: { permanent?: boolean }) => void;
   onParseAll: () => void;
+  onIndexAll: () => void;
 
   collapsed?: boolean;
   onToggleCollapsed?: () => void;
@@ -36,11 +39,13 @@ export function FolderPanel({
   loading,
   error,
   parsedPaths,
+  indexableCount,
   onSelectFolder,
   onCloseFolder,
   onRefresh,
   onLoadEntry,
   onParseAll,
+  onIndexAll,
   collapsed = false,
   onToggleCollapsed,
 }: FolderPanelProps) {
@@ -71,6 +76,16 @@ export function FolderPanel({
             ? "folder.parseAllRemainingTitle"
             : "folder.parseAllRemainingTitlePlural",
           { count: remainingCount },
+        );
+
+  const indexAllTitle =
+    indexableCount === 0
+      ? t("folder.indexAllNoneTitle")
+      : t(
+          indexableCount === 1
+            ? "folder.indexAllRemainingTitle"
+            : "folder.indexAllRemainingTitlePlural",
+          { count: indexableCount },
         );
 
   return (
@@ -123,19 +138,15 @@ export function FolderPanel({
                     className="h-8 pl-7 text-xs"
                   />
                 </div>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  className="h-8"
-                  onClick={onParseAll}
-                  disabled={remainingCount === 0 || loading === "listing"}
-                  title={parseAllTitle}
-                >
-                  <Wand2 className="h-3.5 w-3.5" />
-                  {remainingCount > 0
-                    ? t("folder.parseAllCount", { count: remainingCount })
-                    : t("folder.parseAll")}
-                </Button>
+                <FolderBatchActions
+                  remainingCount={remainingCount}
+                  indexableCount={indexableCount}
+                  parseAllDisabled={remainingCount === 0 || loading === "listing"}
+                  parseAllTitle={parseAllTitle}
+                  indexAllTitle={indexAllTitle}
+                  onParseAll={onParseAll}
+                  onIndexAll={onIndexAll}
+                />
               </div>
 
               <FolderList

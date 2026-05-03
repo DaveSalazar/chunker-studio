@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/Separator";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { useT } from "@/lib/i18n";
 import { EMBEDDING_INPUT_TOKEN_CAP } from "@/lib/embeddingLimits";
-import type { ChunkSettings } from "@shared/types";
+import type { ChunkSettings, ChunkingStrategyId } from "@shared/types";
 
 export interface SettingsFieldsProps {
   value: ChunkSettings;
@@ -13,13 +13,39 @@ export interface SettingsFieldsProps {
   disabled?: boolean;
 }
 
+// Only the strategies the picker renders. The deprecated "paragraph"
+// alias still validates as ChunkingStrategyId (older configs may carry
+// it), but it routes to articleAware in the dispatcher and isn't
+// surfaced as a user choice — having the array narrowed keeps the
+// i18n key lookup type-safe.
+const STRATEGY_OPTIONS = ["articleAware", "wholeDocument"] as const;
+type RenderableStrategy = (typeof STRATEGY_OPTIONS)[number];
+
 export function SettingsFields({ value, onChange, disabled }: SettingsFieldsProps) {
   const t = useT();
+  const isWhole = value.chunkingStrategy === "wholeDocument";
   return (
     <fieldset
       disabled={disabled}
       className="flex w-full min-w-0 flex-col gap-6 disabled:opacity-50"
     >
+      <StrategyPicker
+        value={value.chunkingStrategy}
+        onChange={(s) => onChange({ chunkingStrategy: s })}
+      />
+
+      {isWhole && (
+        <ToggleRow
+          label={t("settings.fields.normalizePlaceholders")}
+          description={t("settings.fields.normalizePlaceholdersDescription")}
+          help={t("settings.fields.normalizePlaceholdersHelp")}
+          checked={value.normalizePlaceholders}
+          onChange={(v) => onChange({ normalizePlaceholders: v })}
+        />
+      )}
+
+      <Separator />
+
       <div className="flex flex-col gap-1.5">
         <Slider
           label={t("settings.fields.maxChunkTokens")}
@@ -134,6 +160,53 @@ function ToggleRow({
         <span className="text-xs text-muted-foreground">{description}</span>
       </div>
       <Switch checked={checked} onCheckedChange={onChange} className="mt-0.5 shrink-0" />
+    </div>
+  );
+}
+
+function StrategyPicker({
+  value,
+  onChange,
+}: {
+  value: ChunkingStrategyId;
+  onChange: (next: RenderableStrategy) => void;
+}) {
+  const t = useT();
+  // Treat "paragraph" (legacy on-disk value) the same as "articleAware"
+  // for the picker — the dispatcher routes them to the same chunker.
+  const active: RenderableStrategy = value === "wholeDocument" ? "wholeDocument" : "articleAware";
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center gap-1.5">
+        <span className="text-sm font-medium">{t("settings.fields.strategy")}</span>
+        <HelpHint content={t("settings.fields.strategyHelp")} />
+      </div>
+      <div
+        role="radiogroup"
+        aria-label={t("settings.fields.strategy")}
+        className="inline-flex w-full overflow-hidden rounded-md border border-border"
+      >
+        {STRATEGY_OPTIONS.map((opt) => {
+          const selected = opt === active;
+          return (
+            <button
+              key={opt}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              onClick={() => onChange(opt)}
+              className={
+                "flex-1 px-3 py-1.5 text-xs transition-colors " +
+                (selected
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary/40 text-muted-foreground hover:bg-secondary")
+              }
+            >
+              {t(`settings.fields.strategy_${opt}`)}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -34,6 +34,7 @@ const chunk = (i: number): ChunkRecord => ({
   article: null,
   heading: null,
   text: `c${i}`,
+  body: null,
   charCount: 2,
   tokenCount: 1,
   startOffset: 0,

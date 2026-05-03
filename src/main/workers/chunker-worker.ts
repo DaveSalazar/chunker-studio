@@ -10,16 +10,26 @@
 import "reflect-metadata";
 import { parentPort } from "node:worker_threads";
 import { ArticleAwareChunker } from "../core/chunking/infrastructure/ArticleAwareChunker";
+import { CompositeChunker } from "../core/chunking/infrastructure/CompositeChunker";
 import { DefaultTextNormalizer } from "../core/chunking/infrastructure/DefaultTextNormalizer";
+import { DefaultPlaceholderNormalizer } from "../core/chunking/infrastructure/DefaultPlaceholderNormalizer";
 import { TiktokenCounter } from "../core/chunking/infrastructure/TiktokenCounter";
+import { WholeDocumentChunker } from "../core/chunking/infrastructure/WholeDocumentChunker";
 import type { ChunkSettings } from "../../shared/types";
 
 if (!parentPort) {
   throw new Error("chunker-worker.ts must be loaded as a worker_thread");
 }
 
+// Worker doesn't share the Inversify container with the main process —
+// it instantiates the same component chunkers + dispatcher manually.
+// Keep this in sync with core/index.ts so behavior matches.
 const counter = new TiktokenCounter();
-const chunker = new ArticleAwareChunker(new DefaultTextNormalizer(), counter);
+const normalizer = new DefaultTextNormalizer();
+const placeholders = new DefaultPlaceholderNormalizer();
+const articleAware = new ArticleAwareChunker(normalizer, counter);
+const wholeDocument = new WholeDocumentChunker(normalizer, placeholders, counter);
+const chunker = new CompositeChunker(articleAware, wholeDocument);
 
 type Request =
   | { id: number; kind: "chunk"; text: string; settings: ChunkSettings }

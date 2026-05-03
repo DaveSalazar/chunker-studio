@@ -6,7 +6,7 @@ interface PendingRequest {
   reject: (err: Error) => void;
 }
 
-export type ParseKind = "pdf" | "docx" | "text";
+export type ParseKind = "pdf" | "docx" | "text" | "docx-html";
 
 type UnsupportedParseReason = "scanned-pdf";
 
@@ -19,6 +19,7 @@ interface ParseSuccess {
     pageOffsets?: number[];
     warnings: string[];
     unsupportedReason?: UnsupportedParseReason;
+    html?: string;
   };
 }
 interface ParseFailure {

@@ -7,6 +7,7 @@ const baseChunk = (overrides: Partial<ChunkRecord> = {}): ChunkRecord => ({
   article: null,
   heading: null,
   text: "",
+  body: null,
   charCount: 0,
   tokenCount: 0,
   startOffset: 0,

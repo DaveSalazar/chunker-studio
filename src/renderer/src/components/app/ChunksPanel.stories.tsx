@@ -16,6 +16,7 @@ const chunk = (i: number): ChunkRecord => ({
   heading: "TÍTULO I: PRINCIPIOS GENERALES",
   text:
     `Art. ${i + 1}.- Principios.- El ejercicio de la autoridad y las potestades públicas se regirá por los siguientes principios: a) Unidad …`,
+  body: null,
   charCount: 240 + i * 4,
   tokenCount: 90 + i,
   startOffset: i * 500,

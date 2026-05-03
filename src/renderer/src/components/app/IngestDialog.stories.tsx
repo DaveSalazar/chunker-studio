@@ -17,6 +17,7 @@ const SAMPLE_CHUNKS: ChunkRecord[] = Array.from({ length: 847 }).map((_, i) => (
   article: `Art. ${i + 1}`,
   heading: null,
   text: `Cuerpo del artículo ${i + 1}…`,
+  body: null,
   charCount: 200,
   tokenCount: 50,
   startOffset: 0,
