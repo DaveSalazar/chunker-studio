@@ -17,6 +17,7 @@ import type {
   OllamaModel,
   OpenedFile,
   ParsedDocument,
+  SessionCacheStats,
 } from "../shared/types";
 
 const INGEST_PROGRESS_CHANNEL = "ingest:progress";
@@ -24,8 +25,11 @@ const INGEST_PROGRESS_CHANNEL = "ingest:progress";
 const api = {
   pickFiles: (options: { multi?: boolean } = {}): Promise<IpcResult<OpenedFile[]>> =>
     ipcRenderer.invoke("file:pick", options),
-  parseDocument: (filePath: string): Promise<IpcResult<ParsedDocument>> =>
-    ipcRenderer.invoke("document:parse", filePath),
+  parseDocument: (
+    filePath: string,
+    opts?: { forceReparse?: boolean },
+  ): Promise<IpcResult<ParsedDocument>> =>
+    ipcRenderer.invoke("document:parse", filePath, opts),
   renderDocxHtml: (filePath: string): Promise<IpcResult<DocxHtmlPreview>> =>
     ipcRenderer.invoke("document:renderDocxHtml", filePath),
   chunk: (
@@ -63,6 +67,10 @@ const api = {
     ipcRenderer.invoke("ingest:run", request),
   exportChunks: (request: ExportRequest): Promise<IpcResult<ExportResult>> =>
     ipcRenderer.invoke("chunks:export", request),
+
+  getCacheStats: (): Promise<IpcResult<SessionCacheStats>> =>
+    ipcRenderer.invoke("cache:stats"),
+  clearCache: (): Promise<IpcResult<true>> => ipcRenderer.invoke("cache:clear"),
   /**
    * Subscribe to ingest progress events. Returns an unsubscribe
    * function so the renderer can detach when its component unmounts.

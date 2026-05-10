@@ -124,15 +124,27 @@ async function parsePdf(bytes: Uint8Array): Promise<ParseSuccess["value"]> {
 }
 
 async function parseDocx(bytes: Uint8Array): Promise<ParseSuccess["value"]> {
+  // Run mammoth's HTML writer (not extractRawText) so structural bold
+  // — operators use it to anchor sections like "SEÑOR JUEZ" or
+  // "PRIMERA:" — survives the trip through the chunker into the body
+  // shipped to ingest. The pure rich-text converter then collapses
+  // the HTML back to text, keeping `**bold**` markers and paragraph
+  // breaks but dropping everything else (images, anchors, tables-as-
+  // grids). The result chunks + embeds the same way plain text did
+  // before, plus a few `**` markers that downstream LLM scaffolds use
+  // verbatim.
   const mammothMod = await import("mammoth");
   const mammoth = mammothMod.default ?? mammothMod;
-  const result = await mammoth.extractRawText({
+  const { docxHtmlToRichText } = await import(
+    "../../shared/lib/docxHtmlToRichText"
+  );
+  const result = await mammoth.convertToHtml({
     buffer: Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength),
   });
   const warnings = result.messages
     .filter((m) => m.type === "warning" || m.type === "error")
     .map((m) => `${m.type}: ${m.message}`);
-  return { text: result.value, warnings };
+  return { text: docxHtmlToRichText(result.value), warnings };
 }
 
 async function renderDocxHtml(bytes: Uint8Array): Promise<ParseSuccess["value"]> {

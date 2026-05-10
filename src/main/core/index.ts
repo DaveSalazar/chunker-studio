@@ -66,6 +66,8 @@ import { IngestDocumentUseCase } from "./ingestion/application/IngestDocumentUse
 import { SessionLocator } from "./session/domain/SessionLocator";
 import type { SessionRepository } from "./session/domain/SessionRepository";
 import { SqliteSessionRepository } from "./session/infrastructure/SqliteSessionRepository";
+import { GetSessionCacheStatsUseCase } from "./session/application/GetSessionCacheStatsUseCase";
+import { ClearSessionCacheUseCase } from "./session/application/ClearSessionCacheUseCase";
 
 const AppContainer = new Container();
 
@@ -144,6 +146,12 @@ AppContainer.bind<IngestDocumentUseCase>(IngestionLocator.IngestDocumentUseCase)
 AppContainer.bind<SessionRepository>(SessionLocator.SessionRepository)
   .to(SqliteSessionRepository)
   .inSingletonScope();
+AppContainer.bind<GetSessionCacheStatsUseCase>(
+  SessionLocator.GetSessionCacheStatsUseCase,
+).to(GetSessionCacheStatsUseCase);
+AppContainer.bind<ClearSessionCacheUseCase>(
+  SessionLocator.ClearSessionCacheUseCase,
+).to(ClearSessionCacheUseCase);
 
 export {
   AppContainer,

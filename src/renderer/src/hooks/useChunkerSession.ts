@@ -7,6 +7,7 @@ import { updateDocById } from "./session/helpers";
 import { useChunkBoundary } from "./session/useChunkBoundary";
 import { useDerived } from "./session/useDerived";
 import { useFolderFlow } from "./session/useFolderFlow";
+import { useMarkPlaceholder } from "./session/useMarkPlaceholder";
 import { useParseFlow } from "./session/useParseFlow";
 import { useRechunkEffect } from "./session/useRechunkEffect";
 import { useScopeMutators } from "./session/useScopeMutators";
@@ -48,6 +49,7 @@ export function useChunkerSession(): ChunkerSession {
   const parseFlow = useParseFlow({ state, setState, autoFlipPending });
   const folderFlow = useFolderFlow({ state, setState });
   const setChunkBoundary = useChunkBoundary(setState);
+  const markPlaceholder = useMarkPlaceholder(setState, lastChunked);
   const scopeMutators = useScopeMutators(setState);
   const derived = useDerived(state);
 
@@ -124,9 +126,12 @@ export function useChunkerSession(): ChunkerSession {
     closeFolder: folderFlow.closeFolder,
     loadEntry: parseFlow.loadEntry,
     parseAllEntries: parseFlow.parseAllEntries,
+    reparseAllEntries: parseFlow.reparseAllEntries,
     parseDocument: parseFlow.parseDocument,
+    reparseDocument: parseFlow.reparseDocument,
     promoteTemp,
     setChunkBoundary,
+    markPlaceholder,
     resetToAuto,
     reset,
   };

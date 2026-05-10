@@ -96,8 +96,10 @@ const Frame = ({ children }: { children: React.ReactNode }) => (
 const baseHandlers = {
   onChunkClick: () => {},
   onParse: () => {},
+  onReparse: () => {},
   onChangeView: () => {},
   onChunkBoundaryChange: () => {},
+  onMarkPlaceholder: () => {},
   onResetToAuto: () => {},
 };
 

@@ -112,16 +112,53 @@ function normalize(input: Partial<AppConfig>): AppConfig {
   };
 }
 
-function sanitizeProfiles(input: SchemaProfile[] | undefined): SchemaProfile[] {
+/**
+ * Exported for unit tests — the rest of the file leans on Electron
+ * APIs that aren't trivially mockable, but this helper is pure.
+ */
+export function sanitizeProfiles(input: SchemaProfile[] | undefined): SchemaProfile[] {
   if (!Array.isArray(input) || input.length === 0) return DEFAULT_PROFILES;
-  // Strip nothing here — assume the editor has validated. We only enforce
-  // shape stability so a malformed file doesn't crash the app.
-  return input
+
+  // Built-in profiles (`builtIn: true`) are owned by the app. When the
+  // bundled defaults evolve between releases — added a new column,
+  // dropped one, renamed a field — the on-disk copy goes stale and
+  // would cause silent SQL errors at ingest time (the original symptom
+  // was "column heading of relation X does not exist" after a built-in
+  // profile dropped its heading column). We always refresh built-ins
+  // from DEFAULT_PROFILES, keyed by id, and leave user-added profiles
+  // untouched.
+  const defaultsById = new Map(DEFAULT_PROFILES.map((p) => [p.id, p]));
+  const seenBuiltInIds = new Set<string>();
+
+  const refreshed = input
     .filter((p): p is SchemaProfile => !!p && typeof p.id === "string" && typeof p.table === "string")
-    .map((p) => ({
-      ...p,
-      documentFields: Array.isArray(p.documentFields) ? p.documentFields : [],
-    }));
+    .map((p) => {
+      if (p.builtIn) {
+        const fresh = defaultsById.get(p.id);
+        if (fresh) {
+          seenBuiltInIds.add(p.id);
+          return fresh;
+        }
+        // Built-in flag set but no matching default — operator removed
+        // it from code without clearing the flag. Treat as user-owned.
+      }
+      return {
+        ...p,
+        documentFields: Array.isArray(p.documentFields) ? p.documentFields : [],
+      };
+    });
+
+  // Append any built-ins the on-disk file is missing entirely (newly
+  // bundled profiles between releases). Without this, an upgrade that
+  // adds a profile would never surface it until the operator wiped
+  // their config.
+  for (const fresh of DEFAULT_PROFILES) {
+    if (!seenBuiltInIds.has(fresh.id) && !refreshed.some((p) => p.id === fresh.id)) {
+      refreshed.push(fresh);
+    }
+  }
+
+  return refreshed;
 }
 
 function pickDefaultProfileId(

@@ -25,11 +25,22 @@ export interface ParseFlowDeps {
 }
 
 export interface ParseFlow {
-  parseById: (id: string, opts?: { autoFlip?: boolean }) => Promise<void>;
+  parseById: (
+    id: string,
+    opts?: { autoFlip?: boolean; forceReparse?: boolean },
+  ) => Promise<void>;
   addFiles: (files: OpenedFile[]) => void;
   parseDocument: (id: string) => void;
+  /** Re-parse a single document, bypassing the SQLite parse cache. Used
+   *  when pure-function changes (placeholders.ts, extractTemplateFields.ts)
+   *  invalidate the previously-cached output even though the file bytes
+   *  are unchanged. */
+  reparseDocument: (id: string) => void;
   loadEntry: (entry: FolderEntry, opts?: { permanent?: boolean }) => void;
   parseAllEntries: () => void;
+  /** Re-parse every loaded folder entry, bypassing the cache. Wider scope
+   *  than parseAllEntries — that one only touches unparsed/errored docs. */
+  reparseAllEntries: () => void;
 }
 
 export function useParseFlow(deps: ParseFlowDeps): ParseFlow {
@@ -45,11 +56,24 @@ export function useParseFlow(deps: ParseFlowDeps): ParseFlow {
   stateRef.current = state;
 
   const parseById = useCallback(
-    async (id: string, opts: { autoFlip?: boolean } = {}) => {
+    async (
+      id: string,
+      opts: { autoFlip?: boolean; forceReparse?: boolean } = {},
+    ) => {
       const autoFlip = opts.autoFlip !== false;
+      const forceReparse = !!opts.forceReparse;
       const doc = stateRef.current.documents.find((d) => d.id === id);
       if (!doc) return;
-      if (doc.loading !== "unparsed" && doc.loading !== "error") return;
+      // Normal parses skip docs that already have a fresh result. A
+      // forceReparse caller passes the flag to override that gate — the
+      // whole point is to re-derive even when loading is "ready".
+      if (
+        !forceReparse &&
+        doc.loading !== "unparsed" &&
+        doc.loading !== "error"
+      ) {
+        return;
+      }
       const path = doc.file.path;
       if (autoFlip) autoFlipPending.current.add(id);
 
@@ -59,13 +83,19 @@ export function useParseFlow(deps: ParseFlowDeps): ParseFlow {
       setState((s) => {
         const d = s.documents.find((x) => x.id === id);
         if (!d) return s;
-        if (d.loading !== "unparsed" && d.loading !== "error") return s;
+        if (
+          !forceReparse &&
+          d.loading !== "unparsed" &&
+          d.loading !== "error"
+        ) {
+          return s;
+        }
         const next = updateDocById(s, id, { loading: "parsing", error: null });
         return s.tempId === id ? { ...next, tempId: null } : next;
       });
 
       try {
-        const parsed = await chunkerClient.parseDocument(path);
+        const parsed = await chunkerClient.parseDocument(path, { forceReparse });
         // Scanned PDFs (no text layer) skip the chunking pipeline entirely
         // and land in "ready"; the viewer renders an unsupported-format
         // empty state instead of an empty parsed pane.
@@ -97,6 +127,13 @@ export function useParseFlow(deps: ParseFlowDeps): ParseFlow {
   const parseDocument = useCallback(
     (id: string) => {
       void parseById(id);
+    },
+    [parseById],
+  );
+
+  const reparseDocument = useCallback(
+    (id: string) => {
+      void parseById(id, { forceReparse: true });
     },
     [parseById],
   );
@@ -152,7 +189,63 @@ export function useParseFlow(deps: ParseFlowDeps): ParseFlow {
     }
   }, [parseById, setState, state.folder]);
 
-  return { parseById, addFiles, parseDocument, loadEntry, parseAllEntries };
+  // Re-parse every entry in the loaded folder, regardless of current
+  // loading state. parseAllEntries skips already-parsed docs because the
+  // common case is "fill in the gaps after I clicked some manually";
+  // reparseAllEntries is the explicit "ignore the cache, redo everything"
+  // path used after pure-function changes (placeholders.ts dictionary,
+  // extractTemplateFields.ts heuristics) where the file bytes are
+  // identical but downstream output is stale.
+  const reparseAllEntries = useCallback(() => {
+    const entries = state.folder?.entries;
+    if (!entries || entries.length === 0) return;
+
+    const idsToReparse: string[] = [];
+    setState((s) => {
+      const byPath = new Map(s.documents.map((d) => [d.file.path, d]));
+      const fresh: DocumentEntry[] = [];
+      for (const entry of entries) {
+        const existing = byPath.get(entry.path);
+        if (existing) {
+          // Skip in-flight work — only forces docs that are settled
+          // (ready, unparsed, or errored). "parsing" / "chunking"
+          // already converging, no point fighting them.
+          if (
+            existing.loading === "ready" ||
+            existing.loading === "unparsed" ||
+            existing.loading === "error"
+          ) {
+            idsToReparse.push(existing.id);
+          }
+          continue;
+        }
+        const file = asOpenedFile(entry);
+        const doc = { ...makeDocFromFile(file), id: newId() };
+        idsToReparse.push(doc.id);
+        fresh.push(doc);
+      }
+      if (fresh.length === 0) return s;
+      return {
+        ...s,
+        documents: [...s.documents, ...fresh],
+        activeId: s.activeId ?? fresh[0].id,
+      };
+    });
+
+    for (const id of idsToReparse) {
+      void parseById(id, { autoFlip: false, forceReparse: true });
+    }
+  }, [parseById, setState, state.folder]);
+
+  return {
+    parseById,
+    addFiles,
+    parseDocument,
+    reparseDocument,
+    loadEntry,
+    parseAllEntries,
+    reparseAllEntries,
+  };
 }
 
 function appendFresh(

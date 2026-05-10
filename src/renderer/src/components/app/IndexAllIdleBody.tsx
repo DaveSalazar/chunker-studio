@@ -1,31 +1,38 @@
 import { AlertTriangle } from "lucide-react";
 import { Label } from "@/components/ui/Label";
 import { Select } from "@/components/ui/Select";
+import { IndexAllPerDocFields } from "@/components/app/IndexAllPerDocFields";
 import { useT } from "@/lib/i18n";
 import type { SchemaProfile } from "@shared/types";
+import type { IndexableDocument } from "@/hooks/session/types";
 
 export interface IndexAllIdleBodyProps {
   profile: SchemaProfile | null;
   profiles: SchemaProfile[];
   onSelectProfile: (id: string) => void;
-  documentCount: number;
+  documents: IndexableDocument[];
   /** When non-null, render the "this body is large" warning with this token count. */
   heavyTokens: number | null;
   loadError: string | null;
+  /** Per-doc, per-field operator overrides. Keyed by `IndexableDocument.id`. */
+  valuesByDoc: Record<string, Record<string, string>>;
+  onChangeValue: (docId: string, fieldKey: string, value: string) => void;
 }
 
 /**
  * Pre-run body of the Index-all dialog: profile picker + heavy-template
- * warning + ready-to-go count. Pulled out of IndexAllDialog so the
+ * warning + per-doc field editor. Pulled out of IndexAllDialog so the
  * dialog stays under the project's 180-line component cap.
  */
 export function IndexAllIdleBody({
   profile,
   profiles,
   onSelectProfile,
-  documentCount,
+  documents,
   heavyTokens,
   loadError,
+  valuesByDoc,
+  onChangeValue,
 }: IndexAllIdleBodyProps) {
   const t = useT();
   if (loadError) {
@@ -68,8 +75,16 @@ export function IndexAllIdleBody({
           {t("ingest.profileHint")}
         </p>
       </div>
+      {profile && (
+        <IndexAllPerDocFields
+          profile={profile}
+          documents={documents}
+          valuesByDoc={valuesByDoc}
+          onChangeValue={onChangeValue}
+        />
+      )}
       <p className="rounded-md border border-border bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
-        {t("indexAll.ready", { count: documentCount })}
+        {t("indexAll.ready", { count: documents.length })}
       </p>
     </>
   );

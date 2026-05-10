@@ -1,6 +1,7 @@
 import { SettingsPanel } from "@/components/app/SettingsPanel";
 import { FolderPanel } from "@/components/app/FolderPanel";
 import type { ChunkerSession, SettingsScope } from "@/hooks/useChunkerSession";
+import type { TreeFolder } from "@/lib/folderTree";
 import type { ChunkSettings } from "@shared/types";
 
 export interface SidebarProps {
@@ -23,7 +24,13 @@ export interface SidebarProps {
   onRefreshFolder: () => void;
   onLoadEntry: ChunkerSession["loadEntry"];
   onParseAllEntries: () => void;
+  onReparseAllEntries: () => void;
   onIndexAll: () => void;
+
+  /** Select-to-Index state. `unchecked` = file paths the user excluded. */
+  unchecked: ReadonlySet<string>;
+  onToggleFile: (path: string) => void;
+  onToggleFolder: (folder: TreeFolder) => void;
 
   settingsCollapsed: boolean;
   onToggleSettingsCollapsed: () => void;
@@ -48,7 +55,11 @@ export function Sidebar({
   onRefreshFolder,
   onLoadEntry,
   onParseAllEntries,
+  onReparseAllEntries,
   onIndexAll,
+  unchecked,
+  onToggleFile,
+  onToggleFolder,
   settingsCollapsed,
   onToggleSettingsCollapsed,
   folderCollapsed,
@@ -81,7 +92,11 @@ export function Sidebar({
         onRefresh={onRefreshFolder}
         onLoadEntry={onLoadEntry}
         onParseAll={onParseAllEntries}
+        onReparseAll={onReparseAllEntries}
         onIndexAll={onIndexAll}
+        unchecked={unchecked}
+        onToggleFile={onToggleFile}
+        onToggleFolder={onToggleFolder}
         collapsed={folderCollapsed}
         onToggleCollapsed={onToggleFolderCollapsed}
       />

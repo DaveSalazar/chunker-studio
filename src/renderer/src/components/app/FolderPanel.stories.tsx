@@ -51,7 +51,11 @@ export const NoSelection: Story = {
         onRefresh={() => {}}
         onLoadEntry={() => {}}
         onParseAll={() => {}}
+        onReparseAll={() => {}}
         onIndexAll={() => {}}
+        unchecked={new Set()}
+        onToggleFile={() => {}}
+        onToggleFolder={() => {}}
       />
     </div>
   ),
@@ -78,7 +82,11 @@ export const Listed: Story = {
             setLoaded(new Set(ENTRIES.map((e) => e.path)))
           }
           indexableCount={3}
-          onIndexAll={() => {}}
+          onReparseAll={() => {}}
+        onIndexAll={() => {}}
+          unchecked={new Set()}
+          onToggleFile={() => {}}
+          onToggleFolder={() => {}}
         />
       </div>
     );
@@ -100,7 +108,11 @@ export const Listing: Story = {
         onRefresh={() => {}}
         onLoadEntry={() => {}}
         onParseAll={() => {}}
+        onReparseAll={() => {}}
         onIndexAll={() => {}}
+        unchecked={new Set()}
+        onToggleFile={() => {}}
+        onToggleFolder={() => {}}
       />
     </div>
   ),
@@ -123,7 +135,11 @@ export const Collapsed: Story = {
           onLoadEntry={() => {}}
           onParseAll={() => {}}
           indexableCount={0}
-          onIndexAll={() => {}}
+          onReparseAll={() => {}}
+        onIndexAll={() => {}}
+          unchecked={new Set()}
+          onToggleFile={() => {}}
+          onToggleFolder={() => {}}
           collapsed={collapsed}
           onToggleCollapsed={() => setCollapsed((v) => !v)}
         />

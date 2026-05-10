@@ -2,7 +2,13 @@ import { useEffect, useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { DocumentWorkspace } from "./DocumentWorkspace";
 import type { DocumentEntry } from "@/hooks/useChunkerSession";
-import type { ChunkRecord, ChunkingResult, OpenedFile, ParsedDocument } from "@shared/types";
+import {
+  DEFAULT_CHUNK_SETTINGS,
+  type ChunkRecord,
+  type ChunkingResult,
+  type OpenedFile,
+  type ParsedDocument,
+} from "@shared/types";
 
 const meta: Meta<typeof DocumentWorkspace> = {
   title: "App/DocumentWorkspace",
@@ -112,8 +118,10 @@ const noopHandlers = {
   onAddTab: () => {},
   onPromote: () => {},
   onParse: () => {},
+  onReparse: () => {},
   onChangeView: () => {},
   onChunkBoundaryChange: () => {},
+  onMarkPlaceholder: () => {},
   onResetToAuto: () => {},
   onPdfPageChange: () => {},
   onIngest: () => {},
@@ -135,6 +143,7 @@ export const TwoTabsActiveReady: Story = {
           activeDoc={docs[0]}
           scope="global"
           overrideCount={0}
+          effectiveSettings={DEFAULT_CHUNK_SETTINGS}
           effectiveResult={docs[0].result}
           totals={{ documents: 2, chunks: 3, tokens: 130, usd: 0.0026 }}
           tempId={null}
@@ -158,6 +167,7 @@ export const NoActiveDocument: Story = {
           activeDoc={null}
           scope="global"
           overrideCount={0}
+          effectiveSettings={DEFAULT_CHUNK_SETTINGS}
           effectiveResult={null}
           totals={{ documents: 0, chunks: 0, tokens: 0, usd: 0 }}
           tempId={null}
@@ -187,6 +197,7 @@ export const ErrorBanner: Story = {
           activeDoc={doc}
           scope="global"
           overrideCount={0}
+          effectiveSettings={DEFAULT_CHUNK_SETTINGS}
           effectiveResult={null}
           totals={{ documents: 1, chunks: 0, tokens: 0, usd: 0 }}
           tempId={null}

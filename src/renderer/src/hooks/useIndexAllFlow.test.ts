@@ -49,6 +49,7 @@ const profile: SchemaProfile = {
 const doc = (id: string, fileName: string): IndexableDocument => ({
   id,
   fileName,
+  path: `/test/${fileName}`,
   chunks: [
     {
       index: 1,
@@ -150,6 +151,25 @@ describe("runIndexAllBatch", () => {
         profileId: "p",
         documentFieldValues: { name: "minuta" },
       }),
+    );
+  });
+
+  it("uses caller-supplied valuesByDocId overrides when provided", async () => {
+    const h = harness(() => Promise.resolve(summary()));
+    await runIndexAllBatch(
+      profile,
+      [doc("a", "minuta.docx"), doc("b", "demanda.docx")],
+      h.deps,
+      h.emit,
+      { a: { name: "operator-edited" } }, // b falls back to filename-derived
+    );
+    expect(h.ingest).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ documentFieldValues: { name: "operator-edited" } }),
+    );
+    expect(h.ingest).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ documentFieldValues: { name: "demanda" } }),
     );
   });
 

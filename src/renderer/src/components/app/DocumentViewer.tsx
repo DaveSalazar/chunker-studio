@@ -1,12 +1,9 @@
-import { AlertTriangle, FileText, FileWarning } from "lucide-react";
+import { FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { EmptyState } from "@/components/app/EmptyState";
+import { DocumentViewerBody } from "@/components/app/DocumentViewerBody";
 import { ManualEditsBar } from "@/components/app/ManualEditsBar";
 import { ParseButton } from "@/components/app/ParseButton";
-import { RawDocumentView } from "@/components/app/RawDocumentView";
-import { SourcePreview } from "@/components/app/SourcePreview";
 import { ViewerTabs } from "@/components/app/ViewerTabs";
-import { useT } from "@/lib/i18n";
 import type { DocumentLoading, DocumentView } from "@/hooks/useChunkerSession";
 import type { ChunkRecord, OpenedFile, ParsedDocument } from "@shared/types";
 
@@ -27,15 +24,18 @@ export interface DocumentViewerProps {
   onPdfPageChange?: (page: number) => void;
   onChunkClick: (index: number) => void;
   onParse: () => void;
+  onReparse: () => void;
   onChangeView: (view: DocumentView) => void;
   onChunkBoundaryChange: (leftArrayIndex: number, newOffset: number) => void;
+  onMarkPlaceholder: (normStart: number, normEnd: number, name: string) => void;
   onResetToAuto: () => void;
 }
 
 /**
  * Header (title, tab toggle, Parse / manual-edits bar) + body (raw or
  * parsed view). Stateless: every interaction is funnelled through
- * props back to `useChunkerSession`.
+ * props back to `useChunkerSession`. The body itself lives in
+ * DocumentViewerBody so this orchestrator stays small.
  */
 export function DocumentViewer({
   file,
@@ -52,8 +52,10 @@ export function DocumentViewer({
   onPdfPageChange,
   onChunkClick,
   onParse,
+  onReparse,
   onChangeView,
   onChunkBoundaryChange,
+  onMarkPlaceholder,
   onResetToAuto,
 }: DocumentViewerProps) {
   const isUnsupported = parsed?.unsupportedReason !== undefined;
@@ -77,12 +79,16 @@ export function DocumentViewer({
           {isUnsupported ? null : manualMode ? (
             <ManualEditsBar onResetToAuto={onResetToAuto} />
           ) : (
-            <ParseButton loading={loading} onParse={onParse} />
+            <ParseButton
+              loading={loading}
+              onParse={onParse}
+              onReparse={onReparse}
+            />
           )}
         </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden p-0">
-        <ViewerBody
+        <DocumentViewerBody
           file={file}
           parsed={parsed}
           chunks={chunks}
@@ -95,83 +101,9 @@ export function DocumentViewer({
           onPdfPageChange={onPdfPageChange}
           onChunkClick={onChunkClick}
           onChunkBoundaryChange={onChunkBoundaryChange}
+          onMarkPlaceholder={onMarkPlaceholder}
         />
       </CardContent>
     </Card>
-  );
-}
-
-function ViewerBody({
-  file,
-  parsed,
-  chunks,
-  normalizedText,
-  view,
-  activeChunkIndex,
-  duplicateIndices,
-  active,
-  pdfPage,
-  onPdfPageChange,
-  onChunkClick,
-  onChunkBoundaryChange,
-}: {
-  file: OpenedFile;
-  parsed: ParsedDocument | null;
-  chunks: ChunkRecord[];
-  normalizedText: string | null;
-  view: DocumentView;
-  activeChunkIndex: number | null;
-  duplicateIndices?: ReadonlySet<number>;
-  active: boolean;
-  pdfPage?: number;
-  onPdfPageChange?: (page: number) => void;
-  onChunkClick: (index: number) => void;
-  onChunkBoundaryChange: (leftArrayIndex: number, newOffset: number) => void;
-}) {
-  const t = useT();
-  if (parsed?.unsupportedReason === "scanned-pdf") {
-    return (
-      <div className="flex h-full items-center justify-center p-6">
-        <EmptyState
-          icon={FileWarning}
-          title={t("viewer.scannedPdfTitle")}
-          description={t("viewer.scannedPdfDescription")}
-        />
-      </div>
-    );
-  }
-  // Both panes stay mounted; toggling `view` only flips visibility so
-  // PDF page + parsed-text scroll all survive a switch.
-  return (
-    <div className="relative h-full w-full">
-      <div className={view === "raw" ? "h-full w-full" : "hidden"}>
-        <RawDocumentView
-          file={file}
-          active={active && view === "raw"}
-          pdfPage={pdfPage}
-          onPdfPageChange={onPdfPageChange}
-        />
-      </div>
-      <div className={view === "parsed" ? "h-full w-full" : "hidden"}>
-        {parsed ? (
-          <SourcePreview
-            text={normalizedText ?? parsed.text}
-            chunks={chunks}
-            activeChunkIndex={activeChunkIndex}
-            duplicateIndices={duplicateIndices}
-            onChunkClick={onChunkClick}
-            onChunkBoundaryChange={onChunkBoundaryChange}
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center p-6">
-            <EmptyState
-              icon={AlertTriangle}
-              title={t("viewer.tabParsed")}
-              description={t("viewer.parsedNotReady")}
-            />
-          </div>
-        )}
-      </div>
-    </div>
   );
 }

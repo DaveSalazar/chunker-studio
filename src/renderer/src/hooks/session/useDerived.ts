@@ -69,6 +69,7 @@ export function useDerived(state: ChunkerSessionState): DerivedSession {
         .map((d) => ({
           id: d.id,
           fileName: d.file.name,
+          path: d.file.path,
           chunks: d.result!.chunks,
           totalTokens: d.result!.totalTokens,
         })),

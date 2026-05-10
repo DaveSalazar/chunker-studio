@@ -14,6 +14,7 @@ import {
   IndexAllRunningView,
 } from "@/components/app/IndexAllPhaseViews";
 import { useIndexAllFlow } from "@/hooks/useIndexAllFlow";
+import { useIndexAllValues } from "@/hooks/useIndexAllValues";
 import { useProfileChoice } from "@/hooks/useProfileChoice";
 import { useT } from "@/lib/i18n";
 import type { IndexableDocument } from "@/hooks/session/types";
@@ -41,6 +42,10 @@ export function IndexAllDialog({
   const t = useT();
   const { phase, start, reset } = useIndexAllFlow();
   const { profile, profiles, selectProfile, loadError } = useProfileChoice(open);
+  const { valuesByDoc, onChangeValue, allDocsReady } = useIndexAllValues(
+    profile,
+    documents,
+  );
 
   // Reset to idle whenever the dialog re-opens for a fresh run.
   useEffect(() => {
@@ -66,11 +71,16 @@ export function IndexAllDialog({
 
   const onStart = () => {
     if (!profile) return;
-    void start(profile, documents);
+    void start(profile, documents, valuesByDoc);
   };
 
   return (
-    <Dialog open={open} onOpenChange={close} modal={phase.kind === "running"}>
+    <Dialog
+      open={open}
+      onOpenChange={close}
+      modal={phase.kind === "running"}
+      className="w-[min(960px,calc(100vw-2rem))]"
+    >
       <DialogHeader
         title={
           <span className="flex items-center gap-2">
@@ -87,9 +97,11 @@ export function IndexAllDialog({
             profile={profile}
             profiles={profiles}
             onSelectProfile={selectProfile}
-            documentCount={documents.length}
+            documents={documents}
             heavyTokens={heavyTokens}
             loadError={loadError}
+            valuesByDoc={valuesByDoc}
+            onChangeValue={onChangeValue}
           />
         )}
         {phase.kind === "running" && <IndexAllRunningView phase={phase} />}
@@ -107,7 +119,15 @@ export function IndexAllDialog({
             <Button variant="outline" onClick={close}>
               {t("ingest.cancel")}
             </Button>
-            <Button onClick={onStart} disabled={!profile || documents.length === 0}>
+            <Button
+              onClick={onStart}
+              disabled={!profile || documents.length === 0 || !allDocsReady}
+              title={
+                profile && documents.length > 0 && !allDocsReady
+                  ? t("indexAll.missingFields")
+                  : undefined
+              }
+            >
               <CloudUpload />
               {t("indexAll.start", { count: documents.length })}
             </Button>

@@ -1,7 +1,19 @@
-import { Fragment, memo, useEffect, useMemo, useRef, type MutableRefObject } from "react";
-import { ChunkBoundaryHandle } from "@/components/app/ChunkBoundaryHandle";
+import {
+  Fragment,
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MutableRefObject,
+} from "react";
+import { ChunkBoundaryAdjacent } from "@/components/app/ChunkBoundaryAdjacent";
+import { PlaceholderPopover } from "@/components/app/PlaceholderPopover";
+import { useSelectionInRef, type SelectionInfo } from "@/hooks/useSelectionInRef";
 import { cn } from "@/lib/cn";
 import { buildSegments, type ChunkSegment } from "@/lib/chunkSegments";
+import { defaultPlaceholderName } from "@/lib/placeholderName";
+import { findPlaceholderTokens } from "@shared/lib/placeholderEngulf";
 import type { ChunkRecord } from "@shared/types";
 
 export interface SourcePreviewProps {
@@ -17,22 +29,18 @@ export interface SourcePreviewProps {
    * Called with the LEFT chunk's array index and the new boundary offset.
    */
   onChunkBoundaryChange?: (leftArrayIndex: number, newOffset: number) => void;
+  /**
+   * When provided, selecting text + confirming the popover wraps the
+   * selection as a manual placeholder. Offsets are in normalized-text
+   * (rendered) coordinates; the session mutator handles source mapping.
+   */
+  onMarkPlaceholder?: (normStart: number, normEnd: number, name: string) => void;
   className?: string;
 }
 
 const EMPTY_DUPLICATES: ReadonlySet<number> = new Set();
 const NO_CHUNKS: ChunkRecord[] = [];
 
-/**
- * Renders the parsed (normalized) text with chunk-aware highlighting.
- * Chrome-less by design — the parent owns the card/header. When
- * `onChunkBoundaryChange` is provided, drag handles appear between
- * adjacent chunks for manual re-slicing.
- *
- * `buildSegments` no longer takes `activeChunkIndex`, so segments are
- * stable across selection changes — only the chunk whose active state
- * flipped re-renders, instead of every span on every click.
- */
 export function SourcePreview({
   text,
   chunks = NO_CHUNKS,
@@ -40,9 +48,11 @@ export function SourcePreview({
   duplicateIndices = EMPTY_DUPLICATES,
   onChunkClick,
   onChunkBoundaryChange,
+  onMarkPlaceholder,
   className,
 }: SourcePreviewProps) {
   const segments = useMemo(() => buildSegments(text, chunks), [text, chunks]);
+  const preRef = useRef<HTMLPreElement | null>(null);
 
   const activeRef = useRef<HTMLSpanElement | null>(null);
   useEffect(() => {
@@ -53,9 +63,22 @@ export function SourcePreview({
     return () => window.cancelAnimationFrame(id);
   }, [activeChunkIndex]);
 
+  // Live selection inside the <pre>; pinned copy survives focus moving
+  // into the popover input. Selecting fresh text replaces the pin.
+  const liveSelection = useSelectionInRef(preRef);
+  const [pinned, setPinned] = useState<SelectionInfo | null>(null);
+  useEffect(() => {
+    if (liveSelection) setPinned(liveSelection);
+  }, [liveSelection]);
+
+  const placeholderTokens = useMemo(() => findPlaceholderTokens(text), [text]);
+
   return (
     <div className={cn("h-full overflow-auto", className)}>
-      <pre className="whitespace-pre-wrap p-5 font-mono text-[12.5px] leading-relaxed text-foreground/85">
+      <pre
+        ref={preRef}
+        className="whitespace-pre-wrap p-5 font-mono text-[12.5px] leading-relaxed text-foreground/85"
+      >
         {segments.map((seg, i) => (
           <Fragment key={i}>
             {seg.chunkIndex === null ? (
@@ -70,7 +93,7 @@ export function SourcePreview({
               />
             )}
             {onChunkBoundaryChange && (
-              <Boundary
+              <ChunkBoundaryAdjacent
                 left={seg}
                 right={segments[i + 1]}
                 chunks={chunks}
@@ -81,6 +104,22 @@ export function SourcePreview({
           </Fragment>
         ))}
       </pre>
+      {pinned && onMarkPlaceholder && (
+        <PlaceholderPopover
+          anchorRect={pinned.rect}
+          defaultName={defaultPlaceholderName(pinned.text)}
+          normalizedText={text}
+          placeholderTokens={placeholderTokens}
+          initialStart={pinned.normStart}
+          initialEnd={pinned.normEnd}
+          onConfirm={(start, end, name) => {
+            onMarkPlaceholder(start, end, name);
+            setPinned(null);
+            window.getSelection()?.removeAllRanges();
+          }}
+          onCancel={() => setPinned(null)}
+        />
+      )}
     </div>
   );
 }
@@ -129,45 +168,4 @@ function ChunkSegmentSpanImpl({
   );
 }
 
-/**
- * Memoized so a selection change only re-renders the two spans whose
- * `active` flipped (old + new active). Without this, every span in the
- * source pane reconciles on every chunk click — for a 2,500-chunk doc
- * that's thousands of span renders per click.
- */
 const ChunkSegmentSpan = memo(ChunkSegmentSpanImpl);
-
-function Boundary({
-  left,
-  right,
-  chunks,
-  text,
-  onChange,
-}: {
-  left: ChunkSegment;
-  right: ChunkSegment | undefined;
-  chunks: ChunkRecord[];
-  text: string;
-  onChange: (leftArrayIndex: number, newOffset: number) => void;
-}) {
-  if (
-    !right ||
-    left.arrayIndex === null ||
-    right.arrayIndex === null
-  ) {
-    return null;
-  }
-  const leftChunk = chunks[left.arrayIndex];
-  const rightChunk = chunks[right.arrayIndex];
-  if (!leftChunk || !rightChunk) return null;
-  return (
-    <ChunkBoundaryHandle
-      leftIndex={left.arrayIndex}
-      rightIndex={right.arrayIndex}
-      text={text}
-      min={leftChunk.startOffset + 1}
-      max={rightChunk.endOffset - 1}
-      onMove={(offset) => onChange(left.arrayIndex!, offset)}
-    />
-  );
-}

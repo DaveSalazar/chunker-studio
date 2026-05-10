@@ -57,22 +57,35 @@ export const DEFAULT_PROFILES: SchemaProfile[] = [
     builtIn: true,
   },
   {
-    id: "legal-templates",
-    name: "Document templates",
+    // Skeleton-driven profile for legal docs (acusación, demanda,
+    // contrato, minuta, etc). Writes only the structural fingerprint
+    // (sections + fields + citations) plus an intent-surface text
+    // column to the `skeletons` table. The verbatim body is stored in
+    // `source_body` for human audit only and is NEVER given to the LLM
+    // — at draft time the LLM redrafts each section in fresh prose,
+    // grounded in real code articles pulled from corpus_chunks.
+    //
+    // Replaces the deprecated "legal-templates" profile (which wrote
+    // verbatim bodies to `template_chunks`, an IP-risky shape).
+    id: "legal-skeletons",
+    name: "Document skeletons",
     description:
-      "Minutas, demandas, contratos, escritos — one row per file. The full body is kept verbatim in the body column for downstream document generation; the embedded text is the first ~1500 chars (intent surface).",
-    table: "template_chunks",
+      "Skeletons of demandas, contratos, minutas, escritos — one row per file. Sections, citations and field markers are extracted and embedded as the intent surface; the verbatim body is kept in source_body for audit only and never given to the LLM.",
+    table: "skeletons",
     textColumn: "text",
     embeddingColumn: "embedding",
     articleColumn: null,
     headingColumn: null,
-    bodyColumn: "body",
+    bodyColumn: "source_body",
+    fieldsColumn: "fields",
+    sectionsColumn: "sections",
+    citationsColumn: "citations",
     documentFields: [
       {
-        key: "templateName",
-        column: "template_name",
-        label: "Template slug",
-        hint: "Stored as template_name. Existing rows for this slug are replaced.",
+        key: "name",
+        column: "name",
+        label: "Slug",
+        hint: "Stored as `name`. Existing rows with this slug are replaced on re-ingest.",
         kind: "text",
         required: true,
         isSourceKey: true,
@@ -87,9 +100,9 @@ export const DEFAULT_PROFILES: SchemaProfile[] = [
         isTitleKey: true,
       },
       {
-        key: "templateType",
-        column: "template_type",
-        label: "Template type",
+        key: "docType",
+        column: "doc_type",
+        label: "Document type",
         kind: "select",
         required: true,
         defaultValue: "minuta",
@@ -98,10 +111,10 @@ export const DEFAULT_PROFILES: SchemaProfile[] = [
           { value: "demanda", label: "Demanda" },
           { value: "contrato", label: "Contrato" },
           { value: "escrito", label: "Escrito" },
-          { value: "denuncia", label: "Denuncia / querella" },
-          { value: "guia", label: "Guía / esquema" },
+          { value: "denuncia", label: "Denuncia / querella / acusación" },
+          { value: "guia", label: "Guía" },
           { value: "manual", label: "Manual / protocolo" },
-          { value: "plantilla", label: "Plantilla genérica" },
+          { value: "esquema", label: "Esquema genérico" },
         ],
       },
     ],

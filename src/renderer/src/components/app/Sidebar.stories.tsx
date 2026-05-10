@@ -21,7 +21,11 @@ const baseHandlers = {
   onCloseFolder: () => {},
   onRefreshFolder: () => {},
   onParseAllEntries: () => {},
+  onReparseAllEntries: () => {},
   onIndexAll: () => {},
+  unchecked: new Set<string>(),
+  onToggleFile: () => {},
+  onToggleFolder: () => {},
 };
 
 export const NoFolderNoDocs: Story = {

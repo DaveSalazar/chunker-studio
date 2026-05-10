@@ -2,6 +2,9 @@ import { AlertTriangle, FileText } from "lucide-react";
 import { DocumentTabs } from "@/components/app/DocumentTabs";
 import { DocumentStatsRow } from "@/components/app/DocumentStatsRow";
 import { EmptyState } from "@/components/app/EmptyState";
+import { PlaceholderSummary } from "@/components/app/PlaceholderSummary";
+import { SkeletonPreview } from "@/components/app/SkeletonPreview";
+import { SkeletonStatsRow } from "@/components/app/SkeletonStatsRow";
 import { WorkspacePanels } from "@/components/app/WorkspacePanels";
 import { useT } from "@/lib/i18n";
 import type { DuplicateInfo } from "@/lib/duplicateChunks";
@@ -10,7 +13,7 @@ import type {
   DocumentEntry,
   SettingsScope,
 } from "@/hooks/useChunkerSession";
-import type { ChunkingResult } from "@shared/types";
+import type { ChunkingResult, ChunkSettings } from "@shared/types";
 
 const EMPTY_DUP_INFO: ReadonlyMap<number, DuplicateInfo> = new Map();
 const EMPTY_DUP_INDICES: ReadonlySet<number> = new Set();
@@ -25,6 +28,9 @@ export interface DocumentWorkspaceProps {
    * "in" — toggling Drop duplicates affects both surfaces in lockstep.
    */
   effectiveResult: ChunkingResult | null;
+  /** Settings the active doc is currently rendered with — drives the
+   *  PlaceholderSummary's "active" styling when normalizePlaceholders is on. */
+  effectiveSettings: ChunkSettings;
   scope: SettingsScope;
   overrideCount: number;
   totals: ChunkerSession["totals"];
@@ -44,8 +50,10 @@ export interface DocumentWorkspaceProps {
   /** Promote a temp tab to permanent — called from DocumentTab dblclick. */
   onPromote: (id: string) => void;
   onParse: (id: string) => void;
+  onReparse: (id: string) => void;
   onChangeView: ChunkerSession["setDocumentView"];
   onChunkBoundaryChange: ChunkerSession["setChunkBoundary"];
+  onMarkPlaceholder: ChunkerSession["markPlaceholder"];
   onResetToAuto: ChunkerSession["resetToAuto"];
   onPdfPageChange: ChunkerSession["setPdfPage"];
   onIngest: () => void;
@@ -56,6 +64,7 @@ export function DocumentWorkspace({
   activeId,
   activeDoc,
   effectiveResult,
+  effectiveSettings,
   scope,
   overrideCount,
   totals,
@@ -69,8 +78,10 @@ export function DocumentWorkspace({
   onAddTab,
   onPromote,
   onParse,
+  onReparse,
   onChangeView,
   onChunkBoundaryChange,
+  onMarkPlaceholder,
   onResetToAuto,
   onPdfPageChange,
   onIngest,
@@ -78,6 +89,7 @@ export function DocumentWorkspace({
   const t = useT();
   const parsed = activeDoc?.parsed ?? null;
   const error = activeDoc?.error ?? null;
+  const isSkeletonMode = effectiveSettings.chunkingStrategy === "wholeDocument";
 
   return (
     <div className="flex h-full min-w-0 flex-col gap-4 overflow-hidden animate-fade-in">
@@ -91,12 +103,19 @@ export function DocumentWorkspace({
         onPromote={onPromote}
       />
 
-      <DocumentStatsRow
-        result={effectiveResult}
-        totals={totals}
-        scope={scope}
-        overrideCount={overrideCount}
-      />
+      {isSkeletonMode ? (
+        <SkeletonStatsRow
+          text={parsed?.text ?? null}
+          documentCount={totals.documents}
+        />
+      ) : (
+        <DocumentStatsRow
+          result={effectiveResult}
+          totals={totals}
+          scope={scope}
+          overrideCount={overrideCount}
+        />
+      )}
 
       {error && (
         <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm text-destructive">
@@ -113,6 +132,13 @@ export function DocumentWorkspace({
         </div>
       ) : null}
 
+      <PlaceholderSummary
+        text={parsed?.text ?? null}
+        willNormalize={effectiveSettings.normalizePlaceholders}
+      />
+      {!isSkeletonMode && <SkeletonPreview text={parsed?.text ?? null} />}
+
+
       <div className="flex-1 overflow-hidden">
         {!activeDoc ? (
           <EmptyState
@@ -124,14 +150,17 @@ export function DocumentWorkspace({
           <WorkspacePanels
             documents={documents}
             activeId={activeId}
+            mode={isSkeletonMode ? "skeleton" : "chunks"}
             effectiveResult={effectiveResult}
             duplicateInfo={duplicateInfo}
             duplicateIndices={duplicateIndices}
             activeChunkIndex={activeChunkIndex}
             onChunkClick={(i) => onChunkClick(i)}
             onParse={onParse}
+            onReparse={onReparse}
             onChangeView={onChangeView}
             onChunkBoundaryChange={onChunkBoundaryChange}
+            onMarkPlaceholder={onMarkPlaceholder}
             onResetToAuto={onResetToAuto}
             onPdfPageChange={onPdfPageChange}
             onIngest={onIngest}

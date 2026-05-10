@@ -107,6 +107,11 @@ export const en = {
     filter: "Filter…",
     parseAll: "Parse all",
     parseAllCount: "Parse all ({count})",
+    reparseAll: "Re-parse all",
+    reparseAllCount: "Re-parse all ({count})",
+    reparseAllTitle:
+      "Re-parse every document, bypassing the cache. Use after placeholder or field-extraction changes.",
+    reparseAllNoneTitle: "No files loaded — open a folder first",
     refresh: "Refresh folder listing",
     close: "Close folder",
     expand: "Expand folder panel",
@@ -149,6 +154,8 @@ export const en = {
     tabParsedDisabled: "Parse the document to enable this view",
     parse: "Parse",
     parseTitle: "Parse and chunk this document",
+    reparse: "Re-parse",
+    reparseTitle: "Re-parse this document, bypassing the cache",
     parsing: "Parsing…",
     chunking: "Chunking…",
     retry: "Retry parsing",
@@ -169,6 +176,44 @@ export const en = {
     resetToAuto: "Reset to auto",
     resetToAutoTitle: "Discard manual edits and re-run the chunker with the current settings",
     boundaryHandleLabel: "Drag to move chunk {left} / {right} boundary",
+  },
+  placeholders: {
+    willNormalize: "{count} placeholders will be normalized",
+    found: "{count} placeholder candidates found",
+    distinct: "({count} distinct types)",
+  },
+  skeleton: {
+    emptyHint:
+      "No structure detected — does this document have uppercase headings?",
+    panel: {
+      title: "Skeleton preview",
+      subtitle:
+        "Estimated structure that will be persisted to the skeletons table.",
+      sectionsHeading: "Sections",
+      leadingProse: "(Leading prose)",
+      showBody: "Show source body",
+      hideBody: "Hide source body",
+      bodyAuditNotice:
+        "Source body — kept locally for audit. Never sent to the LLM at draft time.",
+      sectionCitations: "Citations in this section",
+      sectionFields: "Fields in this section",
+      noCitations: "No citations detected in this section.",
+      noFields: "No fields detected in this section.",
+      emptyTitle: "No structure detected",
+      emptyDescription:
+        "The skeleton extractor found no headings, citations, or fields. Check that the document has uppercase headings and that the parser preserved them.",
+      unparsedTitle: "Document not parsed",
+      unparsedDescription: "Click Parse to see the extracted skeleton.",
+    },
+    stats: {
+      sections: "Sections",
+      citations: "Citations",
+      fields: "Fields",
+      sectionsHint: "{count} with detected headings",
+      citationsHint: "{count} distinct articles",
+      fieldsHint: "{count} distinct field markers",
+      modeBadge: "Skeleton mode",
+    },
   },
   chunks: {
     title: "Chunks",
@@ -196,6 +241,7 @@ export const en = {
     tabGeneral: "General",
     tabConnections: "Connections",
     tabSchemas: "Schemas",
+    tabData: "Data",
     appearance: "Appearance",
     appearanceDescription:
       "Choose between light and dark mode, or follow the system theme.",
@@ -223,6 +269,28 @@ export const en = {
     emptyUrl: "Enter a Postgres URL above first.",
     done: "Done",
     close: "Close",
+  },
+  data: {
+    sectionTitle: "Internal cache",
+    sectionDescription:
+      "Chunker Studio caches parsed text and chunking results in a local SQLite file so re-opening a document is instant. Clear it when cached data goes stale (after a parser or chunker change) — your API keys, profiles, and connection settings stay untouched.",
+    statsLoading: "Reading cache stats…",
+    statsError: "Could not read cache stats: {message}",
+    statsParsedDocs: "Parsed documents",
+    statsChunkingRuns: "Chunking runs",
+    statsChunks: "Chunks",
+    statsManualEdits: "Manually edited",
+    clearButton: "Clear cache",
+    clearing: "Clearing…",
+    cleared: "Cleared",
+    confirmTitle: "Clear cached data?",
+    confirmDescription:
+      "This wipes every cached parse and chunking result. Documents will be re-parsed and re-chunked the next time you open them.",
+    confirmManualWarning:
+      "Heads up: {count} manually-edited chunks will also be removed and cannot be recovered.",
+    confirmEmpty: "The cache is already empty.",
+    confirmCancel: "Cancel",
+    confirmClear: "Clear cache",
   },
   schemas: {
     sectionTitle: "Schemas",
@@ -319,7 +387,10 @@ export const en = {
     title: "Index all ready documents",
     description:
       "Embed and insert {count} loaded documents into the table targeted by the chosen schema profile. One pass, sequential, idempotent — re-runs replace each source's prior rows.",
-    ready: "Ready to index {count} documents · per-doc fields are derived from filenames.",
+    ready: "Ready to index {count} documents · review per-doc fields below before starting.",
+    perDocHeading: "Per-document fields",
+    perDocFilenameLabel: "File",
+    missingFields: "Some files are missing required fields — fill them in before starting.",
     bodyTokenWarning:
       "At least one template body is large ({tokens} tokens). Each chat draft request that retrieves it will spend more on input tokens.",
     start: "Index {count}",
@@ -328,6 +399,21 @@ export const en = {
     summary: "{ok} of {total} documents indexed · {chunks} chunks inserted",
     summaryErrors: "{count} document(s) failed — see the list below.",
     errorTitle: "Batch indexing aborted",
+  },
+  placeholder: {
+    popoverTitle: "Mark as placeholder",
+    namePlaceholder: "PLACEHOLDER NAME",
+    preview: "Will become <<{name}>>",
+    confirm: "Mark",
+    cancel: "Cancel",
+    engulfWarning:
+      "Submit will widen this span to absorb a neighbouring <<…>> token so the wrap doesn't leave a fragment.",
+    spanLabel: "Span",
+    spanCount: "{count} chars",
+    startExtend: "Extend start ← (one char)",
+    startShrink: "Shrink start → (one char)",
+    endShrink: "Shrink end ← (one char)",
+    endExtend: "Extend end → (one char)",
   },
 };
 

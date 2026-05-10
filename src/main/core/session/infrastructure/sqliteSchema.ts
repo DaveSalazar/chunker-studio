@@ -1,6 +1,6 @@
 import type { Database as DatabaseInstance } from "better-sqlite3";
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 const CREATE_SQL = `
   CREATE TABLE IF NOT EXISTS schema_meta (
@@ -81,13 +81,24 @@ export function migrate(db: DatabaseInstance): void {
   if (current < 4) {
     // v3 → v4: add `body` for the wholeDocument chunking strategy. Pre-v4
     // cached chunks come back with body=null, which is correct — the
-    // article-aware strategy never set it. Templates re-parsed under
+    // article-aware strategy never set it. Whole-document parses under
     // v4+ populate it; the IngestDialog uses it to round-trip the
-    // verbatim source text into the body column of template_chunks.
+    // verbatim source text into the profile's bodyColumn (e.g.
+    // `skeletons.source_body`).
     if (!columnExists(db, "chunks", "body")) {
       db.exec("ALTER TABLE chunks ADD COLUMN body TEXT");
     }
     db.prepare("UPDATE schema_meta SET value = ? WHERE key = 'version'").run(4);
+  }
+  if (current < 5) {
+    // v4 → v5: the docx parser now emits text with `**bold**` markers
+    // preserved (see docxHtmlToRichText). Cached docx parses from
+    // earlier versions hold plain text and would silently mask the
+    // new behavior on every cache hit. Drop just those rows so
+    // operators see the new output the next time they open the doc.
+    // PDF/TXT/MD parses are unaffected and stay cached.
+    db.exec("DELETE FROM parsed_documents WHERE LOWER(extension) = 'docx'");
+    db.prepare("UPDATE schema_meta SET value = ? WHERE key = 'version'").run(5);
   }
 }
 

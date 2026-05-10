@@ -26,6 +26,7 @@ function buildDoc(fileName: string, id: number): IndexableDocument {
   return {
     id: `doc-${id}`,
     fileName,
+    path: `/Users/demo/legal-corpus/${fileName}`,
     chunks: [
       {
         index: 1,

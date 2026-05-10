@@ -1,27 +1,4 @@
-// Schema profiles + reference taxonomy + AppConfig + diagnostics.
-
-// Reference / template source-type taxonomy is now a per-profile
-// concern. The constants below are kept as bundled defaults that the
-// "Legal references" / "Legal templates" profiles seed.
-export const REFERENCE_SOURCE_TYPES = [
-  "codigo",
-  "ley",
-  "reglamento",
-  "sentencia",
-  "constitucion",
-] as const;
-export const TEMPLATE_SOURCE_TYPES = [
-  "minuta",
-  "demanda",
-  "contrato",
-  "escrito",
-  "denuncia",
-  "guia",
-  "manual",
-  "plantilla",
-] as const;
-export const SOURCE_TYPES = [...REFERENCE_SOURCE_TYPES, ...TEMPLATE_SOURCE_TYPES] as const;
-export type SourceType = (typeof SOURCE_TYPES)[number];
+// Schema profiles + AppConfig + diagnostics.
 
 /**
  * Embedding provider IDs supported by the app. The profile pins one
@@ -100,6 +77,32 @@ export interface SchemaProfile {
    * stays null on the profile and the column isn't written.
    */
   bodyColumn?: string | null;
+  /**
+   * Per-chunk fields column. When set, the writer parses `<<FIELD>>`
+   * markers out of the chunk's body and stores the deduped list as a
+   * jsonb array. Drives the form-fill UI in the desktop app once the
+   * `find_skeleton` tool is wired.
+   */
+  fieldsColumn?: string | null;
+  /**
+   * Per-chunk sections column. When set (skeleton profiles), the writer
+   * runs the skeleton extractor (`buildSkeleton`) on the chunk body and
+   * stores the ordered list of {order, heading, fieldNames, citationKeys}
+   * as a jsonb array. The presence of this column ALSO switches the
+   * `textColumn` from "first ~1500 chars of body" to an intent-surface
+   * built from `documentFieldValues.title + docType + section headings`,
+   * since copyrightable prose must not be embedded in the LLM-visible
+   * `text` column for skeleton-driven generation.
+   */
+  sectionsColumn?: string | null;
+  /**
+   * Per-chunk citations column. When set, the writer extracts statutory
+   * citations (`Art. N` + code abbreviation) from the chunk body and
+   * stores them as a jsonb array of {key, code, article}. The chat
+   * pipeline uses these keys to pull verbatim article text from
+   * `corpus_chunks` at draft time.
+   */
+  citationsColumn?: string | null;
   /** Per-document constant fields written to every inserted row. */
   documentFields: DocumentField[];
   /** Default chunking strategy when this profile is active. */

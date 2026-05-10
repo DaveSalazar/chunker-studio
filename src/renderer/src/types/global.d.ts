@@ -16,11 +16,15 @@ import type {
   OllamaModel,
   OpenedFile,
   ParsedDocument,
+  SessionCacheStats,
 } from "@shared/types";
 
 export interface ChunkerApi {
   pickFiles: (options?: { multi?: boolean }) => Promise<IpcResult<OpenedFile[]>>;
-  parseDocument: (filePath: string) => Promise<IpcResult<ParsedDocument>>;
+  parseDocument: (
+    filePath: string,
+    opts?: { forceReparse?: boolean },
+  ) => Promise<IpcResult<ParsedDocument>>;
   renderDocxHtml: (filePath: string) => Promise<IpcResult<DocxHtmlPreview>>;
   chunk: (text: string, settings: ChunkSettings) => Promise<IpcResult<ChunkingResult>>;
   countTokens: (texts: string[]) => Promise<IpcResult<number[]>>;
@@ -41,6 +45,9 @@ export interface ChunkerApi {
   ingest: (request: IngestStartRequest) => Promise<IpcResult<IngestSummary>>;
   onIngestProgress: (handler: (progress: IngestProgress) => void) => () => void;
   exportChunks: (request: ExportRequest) => Promise<IpcResult<ExportResult>>;
+
+  getCacheStats: () => Promise<IpcResult<SessionCacheStats>>;
+  clearCache: () => Promise<IpcResult<true>>;
 }
 
 declare global {

@@ -73,6 +73,9 @@ export interface ChunkerSessionState {
 export interface IndexableDocument {
   id: string;
   fileName: string;
+  /** Source file path on disk. Lets the Select-to-Index folder tree filter
+   *  by checked state when calling the IndexAll dialog. */
+  path: string;
   chunks: ChunkRecord[];
   totalTokens: number;
 }
@@ -117,8 +120,15 @@ export interface ChunkerSession extends ChunkerSessionState {
    * parse on each entry that's still unparsed. Single-shot ingest pipeline.
    */
   parseAllEntries: () => void;
+  /** Re-parse every loaded folder entry, bypassing the parse cache. Used
+   *  after pure-function changes (placeholders.ts dictionary, field
+   *  extraction heuristics) where the file bytes are unchanged but the
+   *  cached output is stale. */
+  reparseAllEntries: () => void;
   /** Kick off parsing for a doc that's still in "unparsed" or "error". */
   parseDocument: (id: string) => void;
+  /** Re-parse a doc that's already "ready", bypassing the parse cache. */
+  reparseDocument: (id: string) => void;
   /** Switch a document between the original (raw) view and the parsed/chunked view. */
   setDocumentView: (id: string, view: DocumentView) => void;
   /** Move the PDF preview to a specific page (1-indexed). Per-doc. */
@@ -129,6 +139,19 @@ export interface ChunkerSession extends ChunkerSessionState {
    * Flips the doc into manualMode the first time it's called.
    */
   setChunkBoundary: (id: string, chunkIndex: number, newOffset: number) => void;
+  /**
+   * Wrap a span in the parsed view as a manual placeholder. Offsets are
+   * in normalizedText coordinates (what the operator sees in
+   * SourcePreview). Mapping back to `parsed.text` plus snap-engulf of
+   * any overlapping auto-placeholder happens inside the mutator. Forces
+   * a re-chunk; manual chunk-boundary edits are dropped.
+   */
+  markPlaceholder: (
+    id: string,
+    normStart: number,
+    normEnd: number,
+    name: string,
+  ) => void;
   /** Drop manualMode for a doc and re-run the chunker against the active settings. */
   resetToAuto: (id: string) => void;
   reset: () => void;

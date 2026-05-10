@@ -118,6 +118,11 @@ export const es: Translations = {
     filter: "Filtrar…",
     parseAll: "Procesar todos",
     parseAllCount: "Procesar todos ({count})",
+    reparseAll: "Re-procesar todos",
+    reparseAllCount: "Re-procesar todos ({count})",
+    reparseAllTitle:
+      "Re-procesa cada documento ignorando la caché. Útil tras cambios en marcadores o extracción de campos.",
+    reparseAllNoneTitle: "Sin archivos cargados — abre una carpeta primero",
     refresh: "Actualizar listado",
     close: "Cerrar carpeta",
     expand: "Expandir panel de carpeta",
@@ -161,6 +166,8 @@ export const es: Translations = {
     tabParsedDisabled: "Procesa el documento para habilitar esta vista",
     parse: "Procesar",
     parseTitle: "Procesar y trocear este documento",
+    reparse: "Re-procesar",
+    reparseTitle: "Re-procesa este documento ignorando la caché",
     parsing: "Procesando…",
     chunking: "Troceando…",
     retry: "Reintentar",
@@ -186,6 +193,44 @@ export const es: Translations = {
     resetToAutoTitle:
       "Descartar las ediciones manuales y volver a ejecutar el chunker con los ajustes actuales",
     boundaryHandleLabel: "Arrastra para mover el límite entre los chunks {left} y {right}",
+  },
+  placeholders: {
+    willNormalize: "{count} placeholders se normalizarán",
+    found: "{count} candidatos a placeholder detectados",
+    distinct: "({count} tipos distintos)",
+  },
+  skeleton: {
+    emptyHint:
+      "No se detectó estructura — ¿este documento tiene títulos en mayúsculas?",
+    panel: {
+      title: "Vista previa del esqueleto",
+      subtitle:
+        "Estructura estimada que se guardará en la tabla skeletons.",
+      sectionsHeading: "Secciones",
+      leadingProse: "(Texto introductorio)",
+      showBody: "Mostrar cuerpo",
+      hideBody: "Ocultar cuerpo",
+      bodyAuditNotice:
+        "Cuerpo fuente — se guarda localmente para auditoría. Nunca se envía al LLM al redactar.",
+      sectionCitations: "Citas de esta sección",
+      sectionFields: "Campos de esta sección",
+      noCitations: "Sin citas detectadas en esta sección.",
+      noFields: "Sin campos detectados en esta sección.",
+      emptyTitle: "Sin estructura detectada",
+      emptyDescription:
+        "El extractor no encontró títulos, citas ni campos. Verifica que el documento tenga títulos en mayúsculas y que el parser los haya preservado.",
+      unparsedTitle: "Documento sin procesar",
+      unparsedDescription: "Pulsa Procesar para ver el esqueleto extraído.",
+    },
+    stats: {
+      sections: "Secciones",
+      citations: "Citas",
+      fields: "Campos",
+      sectionsHint: "{count} con títulos detectados",
+      citationsHint: "{count} artículos distintos",
+      fieldsHint: "{count} campos distintos",
+      modeBadge: "Modo esqueleto",
+    },
   },
   chunks: {
     title: "Chunks",
@@ -213,6 +258,7 @@ export const es: Translations = {
     tabGeneral: "General",
     tabConnections: "Conexiones",
     tabSchemas: "Esquemas",
+    tabData: "Datos",
     appearance: "Apariencia",
     appearanceDescription:
       "Elige entre modo claro u oscuro, o sigue el tema del sistema.",
@@ -241,6 +287,28 @@ export const es: Translations = {
     emptyUrl: "Ingresa primero una URL de Postgres.",
     done: "Listo",
     close: "Cerrar",
+  },
+  data: {
+    sectionTitle: "Caché interna",
+    sectionDescription:
+      "Chunker Studio guarda los textos parseados y los resultados de chunking en un archivo SQLite local para que reabrir un documento sea instantáneo. Limpia la caché cuando los datos hayan quedado desactualizados (tras cambios en parsers o chunkers) — tus claves de API, perfiles y conexiones no se tocan.",
+    statsLoading: "Leyendo estadísticas de la caché…",
+    statsError: "No se pudieron leer las estadísticas: {message}",
+    statsParsedDocs: "Documentos parseados",
+    statsChunkingRuns: "Ejecuciones de chunking",
+    statsChunks: "Chunks",
+    statsManualEdits: "Editados manualmente",
+    clearButton: "Limpiar caché",
+    clearing: "Limpiando…",
+    cleared: "Listo",
+    confirmTitle: "¿Limpiar la caché?",
+    confirmDescription:
+      "Se borrarán todos los parseos y resultados de chunking guardados. Los documentos se volverán a parsear y a chunkear la próxima vez que los abras.",
+    confirmManualWarning:
+      "Atención: también se eliminarán {count} chunks editados manualmente, sin posibilidad de recuperarlos.",
+    confirmEmpty: "La caché ya está vacía.",
+    confirmCancel: "Cancelar",
+    confirmClear: "Limpiar caché",
   },
   schemas: {
     sectionTitle: "Esquemas",
@@ -336,7 +404,10 @@ export const es: Translations = {
     title: "Indexar todos los documentos listos",
     description:
       "Genera embeddings e inserta los {count} documentos cargados en la tabla del perfil de schema seleccionado. Una sola pasada, secuencial e idempotente — re-ejecuciones reemplazan las filas previas de cada fuente.",
-    ready: "Listo para indexar {count} documentos · los campos por documento se derivan del nombre del archivo.",
+    ready: "Listo para indexar {count} documentos · revisa los campos por documento antes de empezar.",
+    perDocHeading: "Campos por documento",
+    perDocFilenameLabel: "Archivo",
+    missingFields: "Algunos archivos tienen campos requeridos vacíos — complétalos antes de empezar.",
     bodyTokenWarning:
       "Al menos un cuerpo de plantilla es grande ({tokens} tokens). Cada solicitud de redacción del chat que la recupere pagará más en tokens de entrada.",
     start: "Indexar {count}",
@@ -345,5 +416,20 @@ export const es: Translations = {
     summary: "{ok} de {total} documentos indexados · {chunks} chunks insertados",
     summaryErrors: "{count} documento(s) fallaron — revisa la lista abajo.",
     errorTitle: "Indexación por lotes abortada",
+  },
+  placeholder: {
+    popoverTitle: "Marcar como placeholder",
+    namePlaceholder: "NOMBRE DEL PLACEHOLDER",
+    preview: "Se convertirá en <<{name}>>",
+    confirm: "Marcar",
+    cancel: "Cancelar",
+    engulfWarning:
+      "Al confirmar, esta selección se ampliará para absorber un token <<…>> vecino y evitar dejar un fragmento.",
+    spanLabel: "Selección",
+    spanCount: "{count} chars",
+    startExtend: "Extender inicio ← (un carácter)",
+    startShrink: "Reducir inicio → (un carácter)",
+    endShrink: "Reducir final ← (un carácter)",
+    endExtend: "Extender final → (un carácter)",
   },
 };

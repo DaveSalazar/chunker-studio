@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { ChunksPanel } from "@/components/app/ChunksPanel";
 import { DocumentViewer } from "@/components/app/DocumentViewer";
+import { SkeletonPanel } from "@/components/app/SkeletonPanel";
 import {
   ResizablePanel,
   ResizablePanelGroup,
@@ -14,9 +15,17 @@ import type {
 } from "@/hooks/useChunkerSession";
 import type { ChunkingResult } from "@shared/types";
 
+export type WorkspaceMode = "chunks" | "skeleton";
+
 export interface WorkspacePanelsProps {
   documents: DocumentEntry[];
   activeId: string | null;
+  /**
+   * Drives whether the right pane shows ChunksPanel (article-aware
+   * pipeline) or SkeletonPanel (whole-document / skeleton pipeline).
+   * Resolved upstream from `effectiveSettings.chunkingStrategy`.
+   */
+  mode: WorkspaceMode;
   /** Active doc's chunking result with duplicate filter applied. */
   effectiveResult: ChunkingResult | null;
   duplicateInfo: ReadonlyMap<number, DuplicateInfo>;
@@ -24,8 +33,10 @@ export interface WorkspacePanelsProps {
   activeChunkIndex: number | null;
   onChunkClick: (index: number) => void;
   onParse: (id: string) => void;
+  onReparse: (id: string) => void;
   onChangeView: ChunkerSession["setDocumentView"];
   onChunkBoundaryChange: ChunkerSession["setChunkBoundary"];
+  onMarkPlaceholder: ChunkerSession["markPlaceholder"];
   onResetToAuto: ChunkerSession["resetToAuto"];
   onIngest: () => void;
   /** Updates a doc's PDF page (driven by chunk clicks + prev/next). */
@@ -110,8 +121,10 @@ function ViewerSlot({
   duplicateIndices,
   onChunkClick,
   onParse,
+  onReparse,
   onChangeView,
   onChunkBoundaryChange,
+  onMarkPlaceholder,
   onResetToAuto,
   onPdfPageChange,
 }: SlotBaseProps) {
@@ -133,9 +146,13 @@ function ViewerSlot({
         onPdfPageChange={(page) => onPdfPageChange(doc.id, page)}
         onChunkClick={(i) => onChunkClick(i)}
         onParse={() => onParse(doc.id)}
+        onReparse={() => onReparse(doc.id)}
         onChangeView={(v) => onChangeView(doc.id, v)}
         onChunkBoundaryChange={(leftIdx, offset) =>
           onChunkBoundaryChange(doc.id, leftIdx, offset)
+        }
+        onMarkPlaceholder={(start, end, name) =>
+          onMarkPlaceholder(doc.id, start, end, name)
         }
         onResetToAuto={() => onResetToAuto(doc.id)}
       />
@@ -146,6 +163,7 @@ function ViewerSlot({
 function ChunksSlot({
   doc,
   isActive,
+  mode,
   effectiveResult,
   duplicateInfo,
   activeChunkIndex,
@@ -154,17 +172,25 @@ function ChunksSlot({
 }: SlotBaseProps) {
   return (
     <div className={cn("absolute inset-0 pl-2", !isActive && "hidden")}>
-      <ChunksPanel
-        result={isActive ? effectiveResult : doc.result}
-        loading={doc.loading}
-        activeChunkIndex={isActive ? activeChunkIndex : null}
-        duplicateInfo={isActive ? duplicateInfo : undefined}
-        parsed={doc.parsed}
-        pdfPage={doc.pdfPage}
-        sourceName={doc.file.name}
-        onChunkClick={(i) => onChunkClick(i)}
-        onIngest={onIngest}
-      />
+      {mode === "skeleton" ? (
+        <SkeletonPanel
+          text={doc.parsed?.text ?? null}
+          loading={doc.loading}
+          onIngest={onIngest}
+        />
+      ) : (
+        <ChunksPanel
+          result={isActive ? effectiveResult : doc.result}
+          loading={doc.loading}
+          activeChunkIndex={isActive ? activeChunkIndex : null}
+          duplicateInfo={isActive ? duplicateInfo : undefined}
+          parsed={doc.parsed}
+          pdfPage={doc.pdfPage}
+          sourceName={doc.file.name}
+          onChunkClick={(i) => onChunkClick(i)}
+          onIngest={onIngest}
+        />
+      )}
     </div>
   );
 }

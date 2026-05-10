@@ -15,6 +15,7 @@ import type {
   OllamaModel,
   OpenedFile,
   ParsedDocument,
+  SessionCacheStats,
 } from "@shared/types";
 
 class ChunkerError extends Error {}
@@ -35,8 +36,11 @@ export const chunkerClient = {
   async pickFiles(options: { multi?: boolean } = {}): Promise<OpenedFile[]> {
     return unwrap(await window.chunker.pickFiles(options));
   },
-  async parseDocument(filePath: string): Promise<ParsedDocument> {
-    return unwrap(await window.chunker.parseDocument(filePath));
+  async parseDocument(
+    filePath: string,
+    opts?: { forceReparse?: boolean },
+  ): Promise<ParsedDocument> {
+    return unwrap(await window.chunker.parseDocument(filePath, opts));
   },
   async renderDocxHtml(filePath: string): Promise<DocxHtmlPreview> {
     return unwrap(await window.chunker.renderDocxHtml(filePath));
@@ -85,6 +89,12 @@ export const chunkerClient = {
   },
   async exportChunks(request: ExportRequest): Promise<ExportResult> {
     return unwrap(await window.chunker.exportChunks(request));
+  },
+  async getCacheStats(): Promise<SessionCacheStats> {
+    return unwrap(await window.chunker.getCacheStats());
+  },
+  async clearCache(): Promise<void> {
+    unwrap(await window.chunker.clearCache());
   },
 };
 

@@ -31,10 +31,19 @@ function pickKind(extension: string): ParseKind {
 export function registerParsingHandlers(): void {
   ipcMain.handle(
     "document:parse",
-    async (_event, filePath: string): Promise<IpcResult<ParsedDocument>> =>
+    async (
+      _event,
+      filePath: string,
+      opts?: { forceReparse?: boolean },
+    ): Promise<IpcResult<ParsedDocument>> =>
       wrap(async () => {
         const safePath = assertSafePath(filePath, "file path");
-        console.log("[parsing] document:parse start", safePath);
+        const forceReparse = !!opts?.forceReparse;
+        console.log(
+          "[parsing] document:parse start",
+          safePath,
+          forceReparse ? "(forceReparse)" : "",
+        );
         const stat = AppContainer.get<StatFileUseCase>(FileSystemLocator.StatFileUseCase);
         const fs = AppContainer.get<FileSystemRepository>(
           FileSystemLocator.FileSystemRepository,
@@ -46,7 +55,15 @@ export function registerParsingHandlers(): void {
         const bytes = await fs.readBytes(safePath);
         const fileHash = hashBytes(bytes);
 
-        const cached = await sessions.getCachedParse(fileHash);
+        // forceReparse skips the cache lookup entirely; saveParse below
+        // upserts on the file_hash conflict so the stale row is replaced
+        // by the freshly-parsed result. Used after pure-function changes
+        // (placeholders.ts, extractTemplateFields.ts) where the cached
+        // text is still byte-for-byte correct but downstream consumers
+        // need a re-derive.
+        const cached = forceReparse
+          ? null
+          : await sessions.getCachedParse(fileHash);
         // Treat pre-v3 cached PDFs (missing pageOffsets) as a cache
         // miss so they re-parse once. Without this, chunk → PDF page
         // navigation silently fails for any PDF that was parsed before

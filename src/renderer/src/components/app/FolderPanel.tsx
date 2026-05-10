@@ -6,9 +6,10 @@ import { FolderActions } from "@/components/app/FolderActions";
 import { FolderBatchActions } from "@/components/app/FolderBatchActions";
 import { FolderEmpty } from "@/components/app/FolderEmpty";
 import { FolderHeader } from "@/components/app/FolderHeader";
-import { FolderList } from "@/components/app/FolderList";
+import { FolderTree } from "@/components/app/FolderTree";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n";
+import type { TreeFolder } from "@/lib/folderTree";
 import type { FolderEntry, FolderSelection } from "@shared/types";
 
 export interface FolderPanelProps {
@@ -27,7 +28,13 @@ export interface FolderPanelProps {
   onRefresh: () => void;
   onLoadEntry: (entry: FolderEntry, opts?: { permanent?: boolean }) => void;
   onParseAll: () => void;
+  onReparseAll: () => void;
   onIndexAll: () => void;
+
+  /** Select-to-Index state. `unchecked` = file paths the user excluded. */
+  unchecked: ReadonlySet<string>;
+  onToggleFile: (path: string) => void;
+  onToggleFolder: (folder: TreeFolder) => void;
 
   collapsed?: boolean;
   onToggleCollapsed?: () => void;
@@ -45,7 +52,11 @@ export function FolderPanel({
   onRefresh,
   onLoadEntry,
   onParseAll,
+  onReparseAll,
   onIndexAll,
+  unchecked,
+  onToggleFile,
+  onToggleFolder,
   collapsed = false,
   onToggleCollapsed,
 }: FolderPanelProps) {
@@ -87,6 +98,11 @@ export function FolderPanel({
             : "folder.indexAllRemainingTitlePlural",
           { count: indexableCount },
         );
+
+  const reparseAllTitle =
+    entries.length === 0
+      ? t("folder.reparseAllNoneTitle")
+      : t("folder.reparseAllTitle");
 
   return (
     <Card className="flex shrink-0 flex-col">
@@ -141,21 +157,27 @@ export function FolderPanel({
                 <FolderBatchActions
                   remainingCount={remainingCount}
                   indexableCount={indexableCount}
+                  totalCount={entries.length}
                   parseAllDisabled={remainingCount === 0 || loading === "listing"}
                   parseAllTitle={parseAllTitle}
                   indexAllTitle={indexAllTitle}
+                  reparseAllTitle={reparseAllTitle}
                   onParseAll={onParseAll}
+                  onReparseAll={onReparseAll}
                   onIndexAll={onIndexAll}
                 />
               </div>
 
-              <FolderList
+              <FolderTree
                 entries={entries}
                 filtered={filtered}
                 parsedPaths={parsedPaths}
                 loading={loading}
                 query={query}
                 onLoadEntry={onLoadEntry}
+                unchecked={unchecked}
+                onToggleFile={onToggleFile}
+                onToggleFolder={onToggleFolder}
               />
             </>
           )}

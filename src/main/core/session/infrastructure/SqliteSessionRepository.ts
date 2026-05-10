@@ -8,6 +8,7 @@ import type {
   ChunkSettings,
   ChunkingResult,
   ParsedDocument,
+  SessionCacheStats,
 } from "../../../../shared/types";
 import type {
   CachedChunking,
@@ -140,5 +141,33 @@ export class SqliteSessionRepository implements SessionRepository {
       stmts.updateChunk.run(chunkParams(textHash, settingsHash, leftIndex + 1, rightChunk));
     });
     tx();
+  }
+
+  async getStats(): Promise<SessionCacheStats> {
+    this.ensureOpen();
+    const db = this.db!;
+    const count = (sql: string): number =>
+      (db.prepare(sql).get() as { c: number }).c;
+    return {
+      parsedDocuments: count("SELECT COUNT(*) AS c FROM parsed_documents"),
+      chunkingRuns: count("SELECT COUNT(*) AS c FROM chunking_runs"),
+      chunks: count("SELECT COUNT(*) AS c FROM chunks"),
+      manuallyEditedChunks: count(
+        "SELECT COUNT(*) AS c FROM chunks WHERE manually_edited = 1",
+      ),
+    };
+  }
+
+  async clearAll(): Promise<void> {
+    this.ensureOpen();
+    const db = this.db!;
+    // chunks → chunking_runs CASCADE would handle the chunks delete, but
+    // explicit ordering keeps the operation legible and equivalent if FK
+    // pragmas ever drift.
+    db.transaction(() => {
+      db.exec(
+        "DELETE FROM chunks; DELETE FROM chunking_runs; DELETE FROM parsed_documents;",
+      );
+    })();
   }
 }

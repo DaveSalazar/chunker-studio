@@ -1,5 +1,22 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { Database, Languages, Monitor, Moon, Palette, Plug, Sliders, Sun } from "lucide-react";
+import { useEffect, useState, type ComponentType, type ReactNode } from "react";
+import {
+  Database,
+  HardDrive,
+  Languages,
+  Monitor,
+  Moon,
+  Palette,
+  Plug,
+  Sliders,
+  Sun,
+} from "lucide-react";
+
+type IconType = ComponentType<{ className?: string }>;
+const iconLabel = (Icon: IconType, text: string) => (
+  <>
+    <Icon className="h-3.5 w-3.5" /> {text}
+  </>
+);
 import {
   Dialog,
   DialogBody,
@@ -9,20 +26,31 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Segmented } from "@/components/ui/Segmented";
 import { cn } from "@/lib/cn";
+import { ClearDataSection } from "@/components/app/ClearDataSection";
 import { ConnectionsSection } from "@/components/app/ConnectionsSection";
 import { DialogSection } from "@/components/app/DialogSection";
 import { SchemasSection } from "@/components/app/SchemasSection";
 import { useTheme, type ThemeMode } from "@/lib/theme";
 import { useLocale, type Locale } from "@/lib/i18n";
 
-type TabId = "general" | "connections" | "schemas";
+type TabId = "general" | "connections" | "schemas" | "data";
 
 export interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (next: boolean) => void;
+  /**
+   * Forwarded to the Data tab. Owners pass `session.reset` so the
+   * renderer drops cached open-document state once the SQLite cache
+   * is wiped.
+   */
+  onAfterClearCache?: () => void;
 }
 
-export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
+export function SettingsDialog({
+  open,
+  onOpenChange,
+  onAfterClearCache,
+}: SettingsDialogProps) {
   const { mode, setMode } = useTheme();
   const { locale, setLocale, t } = useLocale();
   const [tab, setTab] = useState<TabId>("general");
@@ -47,30 +75,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           onChange={setTab}
           className="w-full justify-stretch [&>button]:flex-1"
           options={[
-            {
-              value: "general",
-              label: (
-                <>
-                  <Sliders className="h-3.5 w-3.5" /> {t("preferences.tabGeneral")}
-                </>
-              ),
-            },
-            {
-              value: "connections",
-              label: (
-                <>
-                  <Plug className="h-3.5 w-3.5" /> {t("preferences.tabConnections")}
-                </>
-              ),
-            },
-            {
-              value: "schemas",
-              label: (
-                <>
-                  <Database className="h-3.5 w-3.5" /> {t("preferences.tabSchemas")}
-                </>
-              ),
-            },
+            { value: "general", label: iconLabel(Sliders, t("preferences.tabGeneral")) },
+            { value: "connections", label: iconLabel(Plug, t("preferences.tabConnections")) },
+            { value: "schemas", label: iconLabel(Database, t("preferences.tabSchemas")) },
+            { value: "data", label: iconLabel(HardDrive, t("preferences.tabData")) },
           ]}
         />
       </div>
@@ -92,30 +100,9 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               onChange={setMode}
               className="w-full justify-stretch [&>button]:flex-1"
               options={[
-                {
-                  value: "light",
-                  label: (
-                    <>
-                      <Sun className="h-3.5 w-3.5" /> {t("preferences.themeLight")}
-                    </>
-                  ),
-                },
-                {
-                  value: "dark",
-                  label: (
-                    <>
-                      <Moon className="h-3.5 w-3.5" /> {t("preferences.themeDark")}
-                    </>
-                  ),
-                },
-                {
-                  value: "system",
-                  label: (
-                    <>
-                      <Monitor className="h-3.5 w-3.5" /> {t("preferences.themeSystem")}
-                    </>
-                  ),
-                },
+                { value: "light", label: iconLabel(Sun, t("preferences.themeLight")) },
+                { value: "dark", label: iconLabel(Moon, t("preferences.themeDark")) },
+                { value: "system", label: iconLabel(Monitor, t("preferences.themeSystem")) },
               ]}
             />
           </DialogSection>
@@ -143,6 +130,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
 
         <TabPanel id="schemas" active={tab}>
           <SchemasSection active={open} />
+        </TabPanel>
+
+        <TabPanel id="data" active={tab}>
+          <ClearDataSection active={open} onAfterClear={onAfterClearCache} />
         </TabPanel>
       </DialogBody>
       <DialogFooter>

@@ -1,6 +1,11 @@
 import pgvector from "pgvector/pg";
 import type { ChunkPayload } from "../domain/CorpusEntities";
 import type { SchemaProfile } from "../../../../shared/types";
+import { extractTemplateFields } from "../../../../shared/lib/extractTemplateFields";
+import {
+  buildSkeleton,
+  makeIntentSurface,
+} from "../../../../shared/lib/skeleton";
 
 interface ColumnSpec {
   name: string;
@@ -47,7 +52,72 @@ export function planLayout(
   if (profile.bodyColumn) {
     columns.push({ name: profile.bodyColumn, valueFor: (c) => c.body });
   }
-  columns.push({ name: profile.textColumn, valueFor: (c) => c.text });
+  // For skeleton profiles, build the skeleton ONCE per chunk and reuse
+  // it across the sections / citations / fields / text columns —
+  // otherwise we'd re-parse the body up to four times. WeakMap keyed by
+  // the chunk so the cache lifetime matches the writer's iteration.
+  const skeletonCache = new WeakMap<ChunkPayload, ReturnType<typeof buildSkeleton>>();
+  const skel = (c: ChunkPayload) => {
+    let s = skeletonCache.get(c);
+    if (!s) {
+      s = c.body
+        ? buildSkeleton(c.body)
+        : { sections: [], fields: [], citations: [] };
+      skeletonCache.set(c, s);
+    }
+    return s;
+  };
+
+  if (profile.fieldsColumn) {
+    // Parse `<<FIELD>>` markers out of the body and persist a typed
+    // schema as jsonb. We hand pg a pre-stringified JSON literal
+    // because node-postgres treats unknown column types as text by
+    // default — letting it auto-stringify only works once the driver
+    // has cached jsonb's OID, which doesn't always happen across pool
+    // recycles. Stringifying ourselves is unambiguous either way.
+    // For skeleton profiles, prefer the skeleton's own field list so
+    // dedup / order tracks the rest of the row.
+    columns.push({
+      name: profile.fieldsColumn,
+      valueFor: (c) =>
+        JSON.stringify(
+          profile.sectionsColumn
+            ? skel(c).fields
+            : c.body
+              ? extractTemplateFields(c.body)
+              : [],
+        ),
+    });
+  }
+  if (profile.sectionsColumn) {
+    columns.push({
+      name: profile.sectionsColumn,
+      valueFor: (c) => JSON.stringify(skel(c).sections),
+    });
+  }
+  if (profile.citationsColumn) {
+    columns.push({
+      name: profile.citationsColumn,
+      valueFor: (c) => JSON.stringify(skel(c).citations),
+    });
+  }
+  // Text column. For skeleton profiles we replace the per-chunk
+  // first-1500-chars surface with a copyright-light intent surface
+  // (title + doc type + section headings) so the embedded vector
+  // captures retrieval intent without leaking source prose. The
+  // documentFieldValues are the operator-supplied per-doc constants
+  // (title, docType keys; mirror what legal-skeletons declares).
+  if (profile.sectionsColumn) {
+    const titleVal = documentFieldValues["title"] ?? "";
+    const typeVal =
+      documentFieldValues["docType"] ?? documentFieldValues["templateType"] ?? "";
+    columns.push({
+      name: profile.textColumn,
+      valueFor: (c) => makeIntentSurface(titleVal, typeVal, skel(c).sections),
+    });
+  } else {
+    columns.push({ name: profile.textColumn, valueFor: (c) => c.text });
+  }
   columns.push({
     name: profile.embeddingColumn,
     valueFor: (c) => pgvector.toSql(c.embedding),

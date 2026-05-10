@@ -32,7 +32,11 @@ export type IndexAllPhase =
 
 export interface IndexAllFlow {
   phase: IndexAllPhase;
-  start: (profile: SchemaProfile, docs: IndexableDocument[]) => Promise<void>;
+  start: (
+    profile: SchemaProfile,
+    docs: IndexableDocument[],
+    valuesByDocId?: Record<string, Record<string, string>>,
+  ) => Promise<void>;
   reset: () => void;
 }
 
@@ -48,6 +52,10 @@ export interface IndexAllDeps {
  * function — no React, no module-level state — so a unit test can
  * drive it with a mocked ingest and watch the emitted phases.
  *
+ * `valuesByDocId` lets the dialog send per-doc operator overrides
+ * (edited title, picked template_type). When a doc has no entry, the
+ * loop falls back to `initialValuesForProfile` against the filename.
+ *
  * Per-doc errors are recorded and the loop continues; missing-config
  * errors abort the whole batch (every doc would fail the same way).
  */
@@ -56,6 +64,7 @@ export async function runIndexAllBatch(
   docs: IndexableDocument[],
   deps: IndexAllDeps,
   emit: (next: IndexAllPhase) => void,
+  valuesByDocId?: Record<string, Record<string, string>>,
 ): Promise<void> {
   if (docs.length === 0) return;
 
@@ -73,7 +82,8 @@ export async function runIndexAllBatch(
 
   for (let i = 0; i < docs.length; i++) {
     const doc = docs[i];
-    const values = initialValuesForProfile(profile, doc.fileName);
+    const values =
+      valuesByDocId?.[doc.id] ?? initialValuesForProfile(profile, doc.fileName);
 
     emit({
       kind: "running",
@@ -156,7 +166,11 @@ export function useIndexAllFlow(): IndexAllFlow {
   }, []);
 
   const start = useCallback(
-    (profile: SchemaProfile, docs: IndexableDocument[]) =>
+    (
+      profile: SchemaProfile,
+      docs: IndexableDocument[],
+      valuesByDocId?: Record<string, Record<string, string>>,
+    ) =>
       runIndexAllBatch(
         profile,
         docs,
@@ -169,6 +183,7 @@ export function useIndexAllFlow(): IndexAllFlow {
           newJobId: genJobId,
         },
         setPhase,
+        valuesByDocId,
       ),
     [],
   );

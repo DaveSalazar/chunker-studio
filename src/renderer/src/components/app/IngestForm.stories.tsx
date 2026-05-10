@@ -47,13 +47,52 @@ const referencesProfile: SchemaProfile = {
   builtIn: true,
 };
 
-const templatesProfile: SchemaProfile = {
-  ...referencesProfile,
-  id: "legal-templates",
-  name: "Legal templates",
-  description: "Reusable demand / contract / brief templates.",
-  table: "legal_templates",
+const skeletonsProfile: SchemaProfile = {
+  id: "legal-skeletons",
+  name: "Document skeletons",
+  description: "One row per file. Sections, citations, fields — body is audit-only.",
+  table: "skeletons",
+  textColumn: "text",
+  embeddingColumn: "embedding",
+  articleColumn: null,
+  headingColumn: null,
+  bodyColumn: "source_body",
+  fieldsColumn: "fields",
+  sectionsColumn: "sections",
+  citationsColumn: "citations",
+  documentFields: [
+    {
+      key: "name",
+      column: "name",
+      label: "Slug",
+      kind: "text",
+      required: true,
+      isSourceKey: true,
+    },
+    {
+      key: "title",
+      column: "title",
+      label: "Title (display)",
+      kind: "text",
+      required: true,
+      isTitleKey: true,
+    },
+    {
+      key: "docType",
+      column: "doc_type",
+      label: "Document type",
+      kind: "select",
+      required: true,
+      options: [
+        { value: "minuta", label: "Minuta notarial" },
+        { value: "demanda", label: "Demanda" },
+        { value: "contrato", label: "Contrato" },
+      ],
+    },
+  ],
+  chunking: "wholeDocument",
   embedding: { providerId: "ollama", model: "nomic-embed-text", dimensions: 768 },
+  builtIn: true,
 };
 
 const Frame = ({ children }: { children: React.ReactNode }) => (
@@ -64,7 +103,7 @@ export const OpenAIProfile: Story = {
   render: () => {
     const [profile, setProfile] = useState<SchemaProfile | null>(referencesProfile);
     const [values, setValues] = useState<Record<string, string>>({});
-    const profiles = [referencesProfile, templatesProfile];
+    const profiles = [referencesProfile, skeletonsProfile];
     return (
       <Frame>
         <IngestForm
@@ -85,12 +124,12 @@ export const LocalEmbeddings: Story = {
   render: () => (
     <Frame>
       <IngestForm
-        profile={templatesProfile}
-        profiles={[referencesProfile, templatesProfile]}
+        profile={skeletonsProfile}
+        profiles={[referencesProfile, skeletonsProfile]}
         onSelectProfile={() => {}}
-        values={{ source: "manual.docx", sourceType: "manual" }}
+        values={{ name: "minuta-compraventa", title: "Minuta compraventa", docType: "minuta" }}
         onChangeValue={() => {}}
-        chunkCount={42}
+        chunkCount={1}
         estimatedCostUsd={0}
       />
     </Frame>

@@ -1,4 +1,10 @@
-import type { ChunkRecord, ChunkSettings, ChunkingResult, ParsedDocument } from "../../../../shared/types";
+import type {
+  ChunkRecord,
+  ChunkSettings,
+  ChunkingResult,
+  ParsedDocument,
+  SessionCacheStats,
+} from "../../../../shared/types";
 
 export interface CachedParse {
   parsed: ParsedDocument;
@@ -35,4 +41,15 @@ export interface SessionRepository {
     leftChunk: ChunkRecord,
     rightChunk: ChunkRecord,
   ): Promise<void>;
+
+  /** Row counts per table — surfaced in the "clear cache" confirmation modal. */
+  getStats(): Promise<SessionCacheStats>;
+
+  /**
+   * Wipe all cached parses, chunking runs, and chunks (including manually
+   * edited ones). Schema and DB file are preserved; the file shrinks on
+   * next VACUUM (not run here — operators rarely care about disk size and
+   * VACUUM can't run inside the implicit txn we use for the deletes).
+   */
+  clearAll(): Promise<void>;
 }

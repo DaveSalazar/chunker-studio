@@ -4,8 +4,8 @@ import type { SchemaProfile } from "@shared/types";
 /**
  * Strip the file extension to yield the slug used as the natural key
  * (`isSourceKey` field). Mirrors what Postgres sees as `source_name` /
- * `template_name` — same value across re-ingestions of the same file
- * is what makes replace-by-source idempotent.
+ * `name` — same value across re-ingestions of the same file is what
+ * makes replace-by-source idempotent.
  */
 export function defaultSourceName(documentName: string | null): string {
   if (!documentName) return "";
