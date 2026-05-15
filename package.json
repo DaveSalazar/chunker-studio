@@ -38,7 +38,7 @@
     "clsx": "^2.1.1",
     "inversify": "^6.2.2",
     "js-tiktoken": "^1.0.21",
-    "lucide-react": "^0.462.0",
+    "lucide-react": "^1.16.0",
     "mammoth": "^1.12.0",
     "pdfjs-dist": "^4.10.38",
     "pg": "^8.20.0",
