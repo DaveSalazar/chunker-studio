@@ -18,6 +18,11 @@ on:
   push:
     tags: ["v*"]
 
+# Restrictive default; the build job explicitly elevates to
+# `contents: write` only where it needs to attach release artifacts.
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build (${{ matrix.os }})
@@ -31,9 +36,11 @@ jobs:
       # artifacts to a Release.
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      # SHA-pinned (supply-chain hardening); trailing comment tracks the
+      # version and is bumped together by Dependabot.
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 20
           cache: npm

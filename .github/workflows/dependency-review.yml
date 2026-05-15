@@ -1,0 +1,28 @@
+# Blocks PRs that introduce dependencies with known high/critical
+# advisories or disallowed licenses, before they reach main. Pairs with
+# the `npm audit` gate in ci.yml (which also catches pre-existing
+# advisories on every run) and Dependabot (which fixes them over time).
+
+name: Dependency Review
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          # Consistent with ci.yml's `npm audit --audit-level=high`.
+          fail-on-severity: high
+          # MIT-licensed project: deny copyleft/uncommon licenses that
+          # would create distribution obligations. Tune as needed.
+          deny-licenses: GPL-2.0, GPL-3.0, AGPL-3.0, LGPL-3.0

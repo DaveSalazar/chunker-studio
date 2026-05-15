@@ -9,3 +9,8 @@ storybook-static
 .env.*
 !.env.example
 coverage
+
+# This project standardizes on npm (CI uses `npm ci`). Ignoring yarn.lock
+# prevents a stray `yarn install` from reintroducing a second, divergent
+# lockfile — which breaks deterministic installs and Dependabot/audit.
+yarn.lock

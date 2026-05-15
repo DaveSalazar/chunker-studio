@@ -1,10 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
+  defaultDocType,
   defaultSourceName,
   initialValuesForProfile,
   isFormReady,
 } from "./profileFieldDefaults";
-import type { SchemaProfile } from "@shared/types";
+import type { DocumentFieldOption, SchemaProfile } from "@shared/types";
+
+const SKELETON_DOC_TYPES: DocumentFieldOption[] = [
+  { value: "minuta", label: "Minuta notarial" },
+  { value: "demanda", label: "Demanda" },
+  { value: "contrato", label: "Contrato" },
+  { value: "escrito", label: "Escrito" },
+];
 
 const baseProfile = (
   overrides: Partial<SchemaProfile> = {},
@@ -47,6 +55,40 @@ describe("defaultSourceName", () => {
   });
 });
 
+describe("defaultDocType", () => {
+  it("matches a separator-free slug as a substring", () => {
+    expect(
+      defaultDocType("AUTORIZACIÓNMUTUAMINUTA.docx", SKELETON_DOC_TYPES),
+    ).toBe("minuta");
+  });
+
+  it("matches even when the slug drops accents", () => {
+    expect(
+      defaultDocType("AUTORIZACIONMUTUAMINUTA.docx", SKELETON_DOC_TYPES),
+    ).toBe("minuta");
+  });
+
+  it("matches inside hyphenated names", () => {
+    expect(
+      defaultDocType("aclaratoria-y-rectificatoria-minuta-notarial.docx", SKELETON_DOC_TYPES),
+    ).toBe("minuta");
+  });
+
+  it("returns the longest matching option when multiple overlap", () => {
+    const options: DocumentFieldOption[] = [
+      { value: "demanda", label: "Demanda" },
+      { value: "subdemanda", label: "Subdemanda" },
+    ];
+    expect(defaultDocType("subdemanda-laboral.docx", options)).toBe(
+      "subdemanda",
+    );
+  });
+
+  it("returns empty string when no option matches", () => {
+    expect(defaultDocType("acuerdo-confidencialidad.docx", SKELETON_DOC_TYPES)).toBe("");
+  });
+});
+
 describe("initialValuesForProfile", () => {
   it("seeds isSourceKey from the filename without its extension", () => {
     const p = baseProfile({
@@ -82,6 +124,44 @@ describe("initialValuesForProfile", () => {
     ).toEqual({
       title: "Minuta aclaratoria y rectificatoria (notarial)",
     });
+  });
+
+  it("infers docType from the filename when the field is a select with options", () => {
+    const p = baseProfile({
+      documentFields: [
+        {
+          key: "docType",
+          column: "doc_type",
+          label: "Type",
+          kind: "select",
+          required: true,
+          defaultValue: "minuta",
+          options: SKELETON_DOC_TYPES,
+        },
+      ],
+    });
+    expect(
+      initialValuesForProfile(p, "AUTORIZACIÓNMUTUAMINUTA.docx"),
+    ).toEqual({ docType: "minuta" });
+  });
+
+  it("falls back to docType defaultValue when no option matches the filename", () => {
+    const p = baseProfile({
+      documentFields: [
+        {
+          key: "docType",
+          column: "doc_type",
+          label: "Type",
+          kind: "select",
+          required: true,
+          defaultValue: "minuta",
+          options: SKELETON_DOC_TYPES,
+        },
+      ],
+    });
+    expect(
+      initialValuesForProfile(p, "acuerdo-confidencialidad.docx"),
+    ).toEqual({ docType: "minuta" });
   });
 
   it("uses defaultValue for everything else", () => {

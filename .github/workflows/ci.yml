@@ -18,13 +18,23 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Least privilege: CI only needs to read the repo. Without this the
+# workflow inherits the repository/org default GITHUB_TOKEN scope,
+# which is often broader than required.
+permissions:
+  contents: read
+
 jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # Actions pinned to full commit SHA (supply-chain hardening: a
+      # mutable @v4 tag can be repointed by a compromised action repo).
+      # The trailing comment tracks the human-readable version;
+      # Dependabot (github-actions ecosystem) bumps both together.
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 20
           cache: npm
@@ -34,6 +44,13 @@ jobs:
         # postinstall hook (electron-builder install-app-deps) rebuilds
         # better-sqlite3 against Electron's ABI.
         run: npm ci
+
+      - name: Dependency vulnerability gate
+        # Fails the build on known high/critical advisories in the
+        # resolved dependency tree (prod + dev — devDeps are part of the
+        # build/release supply chain for an Electron app). Moderate/low
+        # are surfaced by Dependabot rather than blocking CI.
+        run: npm audit --audit-level=high
 
       - name: Type check
         run: npm run typecheck
@@ -50,7 +67,7 @@ jobs:
         # Available as a downloadable artifact on the PR's CI tab so you
         # can drill into uncovered lines without rerunning locally.
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: coverage-html
           path: coverage/

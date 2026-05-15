@@ -1,0 +1,27 @@
+version: 2
+updates:
+  # npm dependencies. Grouped so routine minor/patch bumps land as one
+  # reviewable PR instead of dozens; majors stay separate so breaking
+  # changes get individual scrutiny.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+    labels:
+      - dependencies
+
+  # GitHub Actions are SHA-pinned in the workflows; this keeps those pins
+  # current (Dependabot updates the SHA and the version comment together).
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+      - ci

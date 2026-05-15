@@ -156,3 +156,25 @@ export function sslConfigFor(
   }
   return false;
 }
+
+/**
+ * Strips ssl/sslmode params from the URL before it's handed to pg.Pool.
+ *
+ * pg-connection-string aliases `sslmode=require` (and prefer/verify-ca)
+ * to verify-full semantics, and the parsed result silently overrides
+ * the explicit `ssl:` option on the Pool config. Without this strip,
+ * sslConfigFor's return value gets ignored whenever the URL contains
+ * sslmode — TLS handshakes against AWS RDS then fail with "self signed
+ * certificate in certificate chain" because Node's default trust store
+ * has no AWS RDS root.
+ */
+export function stripUrlSslParams(databaseUrl: string): string {
+  try {
+    const u = new URL(databaseUrl);
+    u.searchParams.delete("sslmode");
+    u.searchParams.delete("ssl");
+    return u.toString();
+  } catch {
+    return databaseUrl;
+  }
+}

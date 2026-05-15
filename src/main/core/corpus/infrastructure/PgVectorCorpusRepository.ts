@@ -4,7 +4,12 @@ import pgvector from "pgvector/pg";
 import type { CorpusRepository, InsertResult } from "../domain/CorpusRepository";
 import type { ChunkPayload } from "../domain/CorpusEntities";
 import type { SchemaProfile } from "../../../../shared/types";
-import { planLayout, quoteIdent, sslConfigFor } from "./pgvectorLayout";
+import {
+  planLayout,
+  quoteIdent,
+  sslConfigFor,
+  stripUrlSslParams,
+} from "./pgvectorLayout";
 
 const { Pool } = pg;
 
@@ -25,7 +30,7 @@ export class PgVectorCorpusRepository implements CorpusRepository {
     let pool = this.pools.get(databaseUrl);
     if (pool) return pool;
     pool = new Pool({
-      connectionString: databaseUrl,
+      connectionString: stripUrlSslParams(databaseUrl),
       max: 4,
       ssl: sslConfigFor(databaseUrl),
     });

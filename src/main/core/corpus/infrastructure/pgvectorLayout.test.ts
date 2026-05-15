@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { planLayout, quoteIdent, sslConfigFor } from "./pgvectorLayout";
+import {
+  planLayout,
+  quoteIdent,
+  sslConfigFor,
+  stripUrlSslParams,
+} from "./pgvectorLayout";
 import type { ChunkPayload } from "../domain/CorpusEntities";
 import type { DocumentField, SchemaProfile } from "../../../../shared/types";
 
@@ -215,5 +220,37 @@ describe("sslConfigFor", () => {
   it("returns false for unknown sslmode values (e.g., disable, prefer)", () => {
     expect(sslConfigFor("postgres://u:p@h/db?sslmode=disable")).toBe(false);
     expect(sslConfigFor("postgres://u:p@h/db?sslmode=prefer")).toBe(false);
+  });
+});
+
+describe("stripUrlSslParams", () => {
+  it("removes sslmode", () => {
+    expect(stripUrlSslParams("postgres://u:p@h/db?sslmode=require")).toBe(
+      "postgres://u:p@h/db",
+    );
+  });
+
+  it("removes ssl", () => {
+    expect(stripUrlSslParams("postgres://u:p@h/db?ssl=true")).toBe(
+      "postgres://u:p@h/db",
+    );
+  });
+
+  it("removes both ssl and sslmode while preserving other params", () => {
+    expect(
+      stripUrlSslParams(
+        "postgres://u:p@h/db?application_name=foo&sslmode=require&ssl=1",
+      ),
+    ).toBe("postgres://u:p@h/db?application_name=foo");
+  });
+
+  it("returns the URL unchanged when no ssl params are present", () => {
+    expect(
+      stripUrlSslParams("postgres://u:p@h/db?application_name=foo"),
+    ).toBe("postgres://u:p@h/db?application_name=foo");
+  });
+
+  it("returns the input unchanged for malformed URLs", () => {
+    expect(stripUrlSslParams("not a url")).toBe("not a url");
   });
 });

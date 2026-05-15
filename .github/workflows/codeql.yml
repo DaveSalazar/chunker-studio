@@ -1,0 +1,40 @@
+# CodeQL static analysis (free for public repos). Scans JS/TS for
+# injection, path traversal, prototype pollution, etc. Results land in
+# the repo's Security → Code scanning tab. Runs on PRs, pushes to main,
+# and weekly to catch newly-published query rules against unchanged code.
+
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "27 4 * * 1" # Mondays 04:27 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (javascript-typescript)
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write # upload results to code scanning
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@f25eda876ebb741d872b63b9f2c6dfdd77f14b83 # v4.35.5
+        with:
+          languages: javascript-typescript
+          # `security-extended` adds higher-signal security queries beyond
+          # the default suite; worth it for a tool that parses untrusted
+          # documents.
+          queries: security-extended
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@f25eda876ebb741d872b63b9f2c6dfdd77f14b83 # v4.35.5

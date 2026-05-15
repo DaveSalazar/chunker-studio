@@ -1,4 +1,4 @@
-appId: com.solintsoft.chunkerstudio
+appId: io.github.davesalazar.chunkerstudio
 productName: Chunker Studio
 directories:
   buildResources: build
@@ -17,6 +17,11 @@ extraResources:
   - from: resources/logo-title.png
     to: logo-title.png
 mac:
+  # Ship unsigned. Leave this null: otherwise electron-builder
+  # auto-signs with whatever Developer ID happens to be in the local
+  # keychain, mis-attributing the build. CI publishes unsigned anyway;
+  # for real signing use a dedicated CSC_LINK cert in CI.
+  identity: null
   target:
     - target: dmg
       arch: [universal]

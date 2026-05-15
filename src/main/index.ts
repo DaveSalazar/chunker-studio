@@ -86,7 +86,7 @@ function setMacDockIcon(): void {
 }
 
 app.whenReady().then(() => {
-  electronApp.setAppUserModelId("com.solintsoft.chunkerstudio");
+  electronApp.setAppUserModelId("io.github.davesalazar.chunkerstudio");
   setMacDockIcon();
 
   app.on("browser-window-created", (_, win) => {

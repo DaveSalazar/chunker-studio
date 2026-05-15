@@ -1,5 +1,5 @@
 import { fileNameToTemplateTitle } from "@/lib/fileNameToTemplateTitle";
-import type { SchemaProfile } from "@shared/types";
+import type { DocumentFieldOption, SchemaProfile } from "@shared/types";
 
 /**
  * Strip the file extension to yield the slug used as the natural key
@@ -14,12 +14,39 @@ export function defaultSourceName(documentName: string | null): string {
 }
 
 /**
+ * Best-effort docType inference: scans the filename for any of the
+ * field's option values as a substring, accent + case insensitive, so
+ * a glued slug like `AUTORIZACIÓNMUTUAMINUTA.docx` still resolves to
+ * `minuta`. Longest option wins on overlap (e.g. `subdemanda` beats
+ * `demanda`). Returns "" when nothing matches; the caller decides
+ * whether to fall back to the field's `defaultValue`.
+ */
+export function defaultDocType(
+  fileName: string,
+  options: readonly DocumentFieldOption[],
+): string {
+  const haystack = normalize(fileName);
+  const sorted = [...options].sort(
+    (a, b) => b.value.length - a.value.length,
+  );
+  for (const opt of sorted) {
+    if (haystack.includes(normalize(opt.value))) return opt.value;
+  }
+  return "";
+}
+
+function normalize(s: string): string {
+  return s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+}
+
+/**
  * Pre-fill values for a profile's documentFields against a single file.
  *
- *   isSourceKey   → defaultSourceName(filename)
- *   isTitleKey    → fileNameToTemplateTitle(filename)  (operator-editable)
- *   defaultValue  → as-declared in the profile
- *   else          → "" (operator must fill before isFormReady passes)
+ *   isSourceKey      → defaultSourceName(filename)
+ *   isTitleKey       → fileNameToTemplateTitle(filename)  (operator-editable)
+ *   docType (select) → defaultDocType(filename, options) || defaultValue
+ *   defaultValue     → as-declared in the profile
+ *   else             → "" (operator must fill before isFormReady passes)
  *
  * Pure: same inputs always produce the same output. Both the single-doc
  * IngestDialog and the batch Index-all flow build their starting values
@@ -37,6 +64,16 @@ export function initialValuesForProfile(
       out[field.key] = documentName
         ? fileNameToTemplateTitle(documentName)
         : "";
+    } else if (
+      field.key === "docType" &&
+      field.kind === "select" &&
+      field.options &&
+      documentName
+    ) {
+      out[field.key] =
+        defaultDocType(documentName, field.options) ||
+        field.defaultValue ||
+        "";
     } else if (field.defaultValue !== undefined) {
       out[field.key] = field.defaultValue;
     } else {
